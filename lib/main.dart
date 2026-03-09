@@ -2,8 +2,9 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import 'auth/screens/login_screen.dart';
-import 'auth/screens/home_screen.dart';
+import 'features/auth/screens/login_screen.dart';
+import 'features/auth/screens/home_screen.dart';
+import 'features/profile/screens/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,7 +12,7 @@ void main() async {
   final storage = const FlutterSecureStorage();
   final accessToken = await storage.read(key: 'accessToken');
 
-  String initialRoute = '/login';
+  String initialRoute = '/profile';
 
   if (accessToken != null) {
     log("이미 로그인 상태");
@@ -39,6 +40,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
+        '/profile': (context) => const ProfileScreen(),
+
       },
     );
   }

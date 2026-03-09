@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:malbit_fronted/core/services/storage.dart';
+import 'package:malbit_frontend/core/services/storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
