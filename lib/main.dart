@@ -1,9 +1,11 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:malbit_frontend/features/auth/screens/reset_password.dart';
+import 'package:malbit_frontend/features/auth/screens/signup_screen.dart';
 
 import 'features/auth/screens/login_screen.dart';
-import 'features/auth/screens/home_screen.dart';
+import 'features/home/screens/home_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 
 void main() async {
@@ -12,7 +14,7 @@ void main() async {
   final storage = const FlutterSecureStorage();
   final accessToken = await storage.read(key: 'accessToken');
 
-  String initialRoute = '/profile';
+  String initialRoute = '/reset';
 
   if (accessToken != null) {
     log("이미 로그인 상태");
@@ -39,7 +41,9 @@ class MyApp extends StatelessWidget {
 
       routes: {
         '/login': (context) => const LoginScreen(),
-        '/home': (context) => const HomeScreen(),
+        '/signup': (context) => const SignUpScreen(),
+        '/reset': (context) => const ResetPasswordScreen(),
+        '/home': (context) => HomeScreen(),
         '/profile': (context) => const ProfileScreen(),
 
       },

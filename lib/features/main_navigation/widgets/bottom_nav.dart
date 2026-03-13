@@ -28,17 +28,17 @@ class BottomNavBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
 
-          _navItem("assets/images/AI_icon.png", "AI", 0),
-          _navItem("assets/images/Recommand_icon.png", "추천", 1),
-          _navItem("assets/images/Home_icon.png", "홈", 2),
-          _navItem("assets/images/Learn_icon.png", "학습", 3),
-          _navItem("assets/images/Record_icon.png", "기록", 4),
+          _navItem("assets/images/AI_icon.png", 0),
+          _navItem("assets/images/Recommand_icon.png", 1),
+          _navItem("assets/images/Home_icon.png", 2),
+          _navItem("assets/images/Learn_icon.png", 3),
+          _navItem("assets/images/Record_icon.png", 4),
         ],
       ),
     );
   }
 
-  Widget _navItem(String icon, String label, int index) {
+  Widget _navItem(String icon, int index) {
 
     final bool isActive = currentIndex == index;
 
@@ -50,24 +50,14 @@ class BottomNavBar extends StatelessWidget {
 
           Image.asset(
             icon,
-            width: 26,
-            height: 26,
+            width: 50,
+            height: 50,
             color: isActive
                 ? const Color(0xFF4882FD)
                 : Colors.black54,
           ),
 
           const SizedBox(height: 4),
-
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: isActive
-                  ? const Color(0xFF4882FD)
-                  : Colors.black54,
-            ),
-          )
         ],
       ),
     );
