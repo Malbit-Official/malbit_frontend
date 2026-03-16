@@ -14,7 +14,7 @@ void main() async {
   final storage = const FlutterSecureStorage();
   final accessToken = await storage.read(key: 'accessToken');
 
-  String initialRoute = '/reset';
+  String initialRoute = '/login';
 
   if (accessToken != null) {
     log("이미 로그인 상태");
