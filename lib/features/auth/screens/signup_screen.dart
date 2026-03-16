@@ -253,7 +253,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             DropdownMenuItem(value: "OFFICE", child: Text("사무직")),
                             DropdownMenuItem(value: "SALES", child: Text("영업 / 고객상담")),
                             DropdownMenuItem(value: "MEDICAL", child: Text("의료 / 간호")),
-                            DropdownMenuItem(value: "EDU", child: Text("교육 / 학교")),
+                            DropdownMenuItem(value: "EDUCATION", child: Text("교육 / 학교")),
                             DropdownMenuItem(value: "SERVICE", child: Text("서비스 / 매장")),
                             DropdownMenuItem(value: "ETC", child: Text("기타")),
                           ],

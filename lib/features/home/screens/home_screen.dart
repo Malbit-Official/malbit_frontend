@@ -41,16 +41,10 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 width: double.infinity,
                 // 내부 여백: 좌우 25, 위 20, 아래 30 (시안에 맞춰 조절)
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 35),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  //boxShadow: [
-                  //  BoxShadow(
-                  //    color: Colors.black.withOpacity(0.05),
-                  //    blurRadius: 10,
-                  //    offset: const Offset(0, 5),
-                  //  ),
-                  //],
+
                 ),
                 child: Column(
                   children: [
@@ -70,21 +64,32 @@ class _HomeScreenState extends State<HomeScreen> {
                         IconButton(
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          icon: const Icon(Icons.settings, color: Colors.black, size: 28),
+                          icon: const Icon(Icons.settings, color: Colors.black, size: 40),
                           onPressed: () => Navigator.pushNamed(context, '/profile'),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 25),
+                    const SizedBox(height: 15),
                     // 하늘색 메인 배너
                     Container(
+                      height: 170,
                       width: double.infinity,
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.fromLTRB(20, 20, 4, 0),
                       decoration: BoxDecoration(
                         color: const Color(0xffC9E9FF),
                         borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 5,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                       ),
-                      child: Row(
+
+                      clipBehavior: Clip.antiAlias,
+                      
+                      child: Stack(
                         children: [
                           const Expanded(
                             child: Column(
@@ -93,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Text(
                                   "지금 말하면,\n더 자연스럽게 바꿔줘요",
                                   style: TextStyle(
-                                      fontSize: 20,
+                                      fontSize: 22,
                                       fontWeight: FontWeight.bold,
                                       height: 1.3),
                                 ),
@@ -101,20 +106,25 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Text(
                                   "부정확한 발화를 정확한 문장으로!",
                                   style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 18,
                                       color: Colors.black54,
-                                      fontWeight: FontWeight.w500),
+                                      fontWeight: FontWeight.w600),
                                 ),
                               ],
                             ),
                           ),
-                          Image.asset(
-                            "assets/images/banner.png",
-                            width: 75,
-                            height: 75,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.face, size: 70, color: Colors.blueAccent),
+                          Positioned(
+                            right: -10,
+                            bottom: -18,
+                            // 배너 사람 이미지
+                            child: Image.asset(
+                              "assets/images/banner.png",
+                              width: 135,
+                              height: 150,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.face, size: 80, color: Colors.blueAccent),
+                            ),
                           ),
                         ],
                       ),
@@ -122,6 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+
+              const SizedBox(height: 10),
 
               /// 3. 하단 콘텐츠 영역 (여기서부터는 좌우 여백 적용)
               Padding(
@@ -147,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 28),
 
                     /// 추천 버튼
                     Container(
@@ -175,14 +187,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           "상황별 발화 추천받기\nclick!",
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.white),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 28),
 
                     /// 오늘의 업무 기록 카드
                     _buildSectionCard(
@@ -195,27 +207,61 @@ class _HomeScreenState extends State<HomeScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("참여자 수", style: TextStyle(color: Colors.black87)),
-                              Text("${_participantCount.toInt()}명",
-                                  style: const TextStyle(color: Color(0xff4882FD), fontWeight: FontWeight.bold)),
+                              const Text(
+                                "참여자 수",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black87
+                                )
+                              ),
+                              Text(
+                                _participantCount >= 5
+                                    ? "5명 이상"
+                                    : "${_participantCount.toInt()}명",
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400
+                                ),
+                              ),
                             ],
                           ),
-                          Slider(
-                            value: _participantCount,
-                            min: 0, max: 5, divisions: 5,
-                            activeColor: const Color(0xff4882FD),
-                            onChanged: (v) => setState(() => _participantCount = v),
+                          SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              // 1. 슬라이더 트랙(선)의 두께 설정
+                              trackHeight: 2.3, // 기본값은 보통 4.0입니다. 숫자를 키울수록 두꺼워집니다.
+
+                              // 2. 동그란 손잡이(Thumb) 설정 (원하는 경우)
+                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12.0),
+
+                              // 3. 클릭 시 퍼지는 효과의 크기
+                              overlayShape: const RoundSliderOverlayShape(overlayRadius: 15.0),
+
+                              // 4. 색상 세밀하게 조정
+                              activeTrackColor: const Color(0xffEF5350),   // 채워지는 부분 색상
+                              inactiveTrackColor: const Color(0xffF0F0F0), // 안 채워진 부분 색상
+                              thumbColor: const Color(0xffEF5350),         // 손잡이 색상
+                            ),
+                            child: Slider(
+                              value: _participantCount,
+                              min: 0,
+                              max: 5,
+                              divisions: 5,
+                              onChanged: (v) => setState(() => _participantCount = v),
+                            ),
                           ),
                           const SizedBox(height: 10),
                           Center(
                             child: GestureDetector(
-                              onTap: () => print("녹음 버튼 클릭"),
-                              child: const CircleAvatar(
-                                radius: 30,
-                                backgroundColor: Color(0xffF25D50),
-                                child: Text("REC",
-                                    style: TextStyle(
-                                        color: Colors.white, fontWeight: FontWeight.bold)),
+                              onTap: () {
+                                print("녹음 시작");
+                                // 여기에 녹음 관련 로직을 넣으세요.
+                              },
+                              child: Image.asset(
+                                "assets/images/Rec_Button.png", // 여기에 준비하신 녹음 버튼 이미지 경로를 넣으세요
+                                width: 55,  // 기존 radius 30이 지름 60이었으니, 70~80 정도가 적당합니다.
+                                height: 55,
+                                fit: BoxFit.contain,
                               ),
                             ),
                           )
@@ -228,10 +274,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: 2,
-        onTap: (index) {},
       ),
     );
   }
