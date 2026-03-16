@@ -1,9 +1,103 @@
 import 'package:flutter/material.dart';
 import 'package:malbit_frontend/features/main_navigation/widgets/bottom_nav.dart';
 import 'package:malbit_frontend/features/profile/screens/job_environment_screen.dart';
+import 'package:malbit_frontend/features/voice_settings/screens/voice_register_screen.dart';
+import 'package:malbit_frontend/features/profile/screens/edit_profile_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+
+  String currentJob = "사무직";
+  String userName = "사용자 이름";
+  String email = "email@naver.com";
+  bool notificationEnabled = true;
+  bool isLargeButton = false;
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("음성 삭제"),
+          content: const Text("등록된 음성을 정말 삭제하시겠습니까?"),
+          actions: [
+
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.grey),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("취소"),
+            ),
+
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[100],
+              ),
+              onPressed: () {
+
+                Navigator.pop(context);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("음성이 삭제되었습니다."),
+                  ),
+                );
+              },
+              child: const Text("삭제"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("로그아웃"),
+          content: const Text("정말 로그아웃 하시겠습니까?"),
+          actions: [
+
+            /// 취소
+            OutlinedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("취소"),
+            ),
+
+            /// 확인
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[100],),
+              onPressed: () {
+
+                /// 로그인 화면으로 이동
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+                      (route) => false,
+                );
+
+              },
+              child: const Text("확인"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,24 +142,19 @@ class ProfileScreen extends StatelessWidget {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          "사용자 이름",
+                      children: [
+                         Text(
+                          userName,
                           style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold),
                         ),
-                        SizedBox(height: 4),
-                        Text("이메일 @ naver.com"),
-                        Text("현재 직무 : 사무직"),
+                        const SizedBox(height: 4),
+                        Text(email),
+                        Text("현재 직무 : $currentJob"),
                       ],
                     ),
                   ),
-
-                  OutlinedButton(
-                    onPressed: () {},
-                    child: const Text("프로필 사진 변경"),
-                  )
                 ],
               ),
             ),
@@ -79,13 +168,29 @@ class ProfileScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
-                children: const [
-                  _MenuTile(title: "프로필 관리"),
-                  Divider(height: 1),
-                  _MenuTile(title: "이메일 변경"),
-                  Divider(height: 1),
-                  _MenuTile(title: "로그아웃"),
-                ],
+                children:  [
+                  _MenuTile(
+                    title: "프로필 관리",
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditProfileScreen(
+                            name: userName,
+                            email: email,
+                          ),
+                        ),
+                      );
+
+                      if (result != null) {
+                        setState(() {
+                          userName = result["name"];
+                          email = result["email"];
+                        });
+                      }
+                    },
+                  ),
+               ],
               ),
             ),
 
@@ -114,15 +219,26 @@ class ProfileScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("사무직"),
+                      Text(currentJob),
+
                       OutlinedButton(
-                        onPressed: () {
-                          Navigator.push(
+                        onPressed: () async {
+
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const JobEnvironmentScreen(),
+                              builder: (context) => JobEnvironmentScreen(
+                                currentJob: currentJob,
+                              ),
                             ),
                           );
+
+                          if (result != null) {
+                            setState(() {
+                              currentJob = result;
+                            });
+                          }
+
                         },
                         child: const Text("직무 환경 변경"),
                       )
@@ -134,9 +250,26 @@ class ProfileScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment:
                     MainAxisAlignment.spaceEvenly,
-                    children: const [
-                      _SmallButton(text: "음성 재등록"),
-                      _SmallButton(text: "음성 삭제"),
+                    children:  [
+
+                      _SmallButton(
+                        text: "음성 재등록",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const VoiceRegisterScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      _SmallButton(
+                        text: "음성 삭제",
+                        onTap: () {
+                          _showDeleteDialog(context);
+                        },
+                      ),
                     ],
                   )
                 ],
@@ -177,11 +310,17 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   Row(
-                    mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Text("버튼 크게 보기"),
-                      Switch(value: true, onChanged: null),
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("버튼 크게 보기"),
+                      Switch(
+                        value: isLargeButton,
+                        onChanged: (value) {
+                          setState(() {
+                            isLargeButton = value;
+                          });
+                        },
+                      ),
                     ],
                   ),
                 ],
@@ -210,35 +349,67 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+
+            /// 로그아웃
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                title: const Text(
+                  "로그아웃",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  _showLogoutDialog(context);
+                },
+              ),
+            ),
           ],
         ),
       ),
-
     );
   }
 }
 
 class _MenuTile extends StatelessWidget {
   final String title;
-  const _MenuTile({required this.title});
+  final VoidCallback? onTap;
+
+  const _MenuTile({
+    required this.title,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(title),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: onTap,
     );
   }
 }
 
 class _SmallButton extends StatelessWidget {
   final String text;
-  const _SmallButton({required this.text});
+  final VoidCallback? onTap;
+
+  const _SmallButton({
+    required this.text,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return OutlinedButton(
-      onPressed: () {},
+      onPressed: onTap,
       child: Text(text),
     );
   }
