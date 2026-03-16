@@ -1,26 +1,6 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: const Color(0xFF4882FD),
-        textSelectionTheme: const TextSelectionThemeData(
-          cursorColor: Color(0xFF4882FD),
-        ),
-      ),
-      home: const SignUpScreen(),
-    );
-  }
-}
+import '../services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -30,9 +10,29 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  // 비밀번호 가시성 상태 변수
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _nameController = TextEditingController();
+
+  // 2. 가시성 및 로딩 상태
   bool _isObscured = true;
   bool _isConfirmObscured = true;
+  bool _isLoading = false;
+
+  // 3. 명세서 필수 데이터 (초기값)
+  //String _disabilityType = "ACQUIRED";
+  //int _cognitiveLevel = 3;
+  String _selectedJobType = "OFFICE";
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
 
   // 공통 InputDecoration 설정
   InputDecoration _getInputDecoration(String hint) {
@@ -54,6 +54,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
         borderSide: const BorderSide(color: Color(0xFF4882FD), width: 1.5),
       ),
     );
+  }
+
+  // API 호출 함수
+  Future<void> _handleSignUp() async {
+    // 1. 유효성 검사
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty || _nameController.text.isEmpty) {
+      _showSnackBar("모든 필수 항목(*)을 입력해주세요.");
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showSnackBar("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    // 2. AuthService 호출
+    final result = await AuthService.signUp(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      name: _nameController.text.trim(),
+      jobType: _selectedJobType, // 이미 대문자 문자열임
+    );
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    // 3. 결과 처리
+    if (result['success']) {
+      _showSnackBar("회원가입이 완료되었습니다!");
+      Navigator.pushReplacementNamed(context, '/login');
+    } else {
+      _showSnackBar(result['message']);
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -84,7 +123,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 8),
                       SizedBox(
                         height: 43,
-                        child: TextField(decoration: _getInputDecoration("이메일")),
+                        child: TextField(controller: _emailController, decoration: _getInputDecoration("이메일")),
                       ),
                       const SizedBox(height: 7),
 
@@ -146,6 +185,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       SizedBox(
                         height: 43,
                         child: TextField(
+                          controller: _passwordController,
                           obscureText: _isObscured, // 변수에 따라 가려짐 처리
                           decoration: _getInputDecoration("비밀번호").copyWith(
                             suffixIcon: IconButton(
@@ -169,6 +209,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       SizedBox(
                         height: 43,
                         child: TextField(
+                          controller: _confirmPasswordController,
                           obscureText: _isConfirmObscured,
                           decoration: _getInputDecoration("비밀번호 재입력").copyWith(
                             suffixIcon: IconButton(
@@ -193,7 +234,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 8),
                       SizedBox(
                         height: 43,
-                        child: TextField(decoration: _getInputDecoration("닉네임")),
+                        child: TextField(
+                          controller: _nameController,
+                          decoration: _getInputDecoration("닉네임"),
+                        ),
                       ),
                       const SizedBox(height: 20),
 
@@ -206,14 +250,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           decoration: _getInputDecoration("선택"),
                           iconEnabledColor: const Color(0xFFC7C7C7),
                           items: const [
-                            DropdownMenuItem(value: "office", child: Text("사무직")),
-                            DropdownMenuItem(value: "sales", child: Text("영업 / 고객상담")),
-                            DropdownMenuItem(value: "medical", child: Text("의료 / 간호")),
-                            DropdownMenuItem(value: "edu", child: Text("교육 / 학교")),
-                            DropdownMenuItem(value: "service", child: Text("서비스 / 매장")),
-                            DropdownMenuItem(value: "etc", child: Text("기타")),
+                            DropdownMenuItem(value: "OFFICE", child: Text("사무직")),
+                            DropdownMenuItem(value: "SALES", child: Text("영업 / 고객상담")),
+                            DropdownMenuItem(value: "MEDICAL", child: Text("의료 / 간호")),
+                            DropdownMenuItem(value: "EDU", child: Text("교육 / 학교")),
+                            DropdownMenuItem(value: "SERVICE", child: Text("서비스 / 매장")),
+                            DropdownMenuItem(value: "ETC", child: Text("기타")),
                           ],
-                          onChanged: (value) {},
+                          onChanged: (value) => setState(() => _selectedJobType = value!),
                         ),
                       ),
                       const SizedBox(height: 40),
@@ -223,15 +267,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         width: 322,
                         height: 43,
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/home');
-                          },
+                          // ✅ onPressed 수정: 로딩 중이면 null(비활성화), 아니면 가입 로직 호출
+                          onPressed: _isLoading ? null : _handleSignUp,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF4882FD),
                             elevation: 0,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
                           ),
-                          child: const Text(
+                          child: _isLoading
+                              ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                              : const Text(
                             "가입하기",
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                           ),
