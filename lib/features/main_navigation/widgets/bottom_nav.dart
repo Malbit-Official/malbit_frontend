@@ -12,7 +12,6 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       height: 70,
       decoration: BoxDecoration(
@@ -27,7 +26,6 @@ class BottomNavBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-
           _navItem("assets/images/AI_icon.png", 0),
           _navItem("assets/images/Recommand_icon.png", 1),
           _navItem("assets/images/Home_icon.png", 2),
@@ -43,11 +41,14 @@ class BottomNavBar extends StatelessWidget {
     final bool isActive = currentIndex == index;
 
     return GestureDetector(
-      onTap: () => onTap(index),
+      onTap: () {
+        print("탭 클릭됨: $index"); // 터미널(Debug Console)에 이 글자가 뜨는지 확인하세요!
+        onTap(index);
+      },
+      behavior: HitTestBehavior.opaque, // 클릭 영역 확보
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-
           Image.asset(
             icon,
             width: 50,
@@ -56,7 +57,6 @@ class BottomNavBar extends StatelessWidget {
                 ? const Color(0xFF4882FD)
                 : Colors.black54,
           ),
-
           const SizedBox(height: 4),
         ],
       ),

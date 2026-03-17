@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    const apiUrl = 'http://10.0.2.2:8080/api/auth/login';
+    const apiUrl = 'http://10.0.2.2:8080/api/users/login';
 
     final loginData = {
       'email': _emailController.text,

@@ -6,6 +6,7 @@ import 'package:malbit_frontend/features/auth/screens/signup_screen.dart';
 
 import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/home_screen.dart';
+import 'features/main_navigation/screens/main_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 
 void main() async {
@@ -14,13 +15,14 @@ void main() async {
   final storage = const FlutterSecureStorage();
   final accessToken = await storage.read(key: 'accessToken');
 
-  String initialRoute = '/login';
+  String initialRoute = '/main';
 
   if (accessToken != null) {
     log("이미 로그인 상태");
-    initialRoute = '/home';
+    initialRoute = '/main';
   } else {
     log("로그인 필요");
+    initialRoute = '/login';
   }
 
   runApp(MyApp(initialRoute: initialRoute));
@@ -45,7 +47,7 @@ class MyApp extends StatelessWidget {
         '/reset': (context) => const ResetPasswordScreen(),
         '/home': (context) => HomeScreen(),
         '/profile': (context) => const ProfileScreen(),
-
+        '/main': (context) => const MainScreen(),
       },
     );
   }
