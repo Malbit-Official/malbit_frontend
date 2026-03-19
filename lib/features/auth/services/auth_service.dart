@@ -7,11 +7,14 @@ class AuthService {
   static const String baseUrl = "http://10.0.2.2:8080";
 
   static Future<Map<String, dynamic>> signUp({
-    // 추후 장애유형 등등 추가
     required String email,
     required String password,
+    required String passwordConfirm,
     required String name,
     required String jobType,
+    required String disabilityType,
+    required int cognitiveLevel,
+    required String code,
   }) async {
     final url = Uri.parse('$baseUrl/api/users/join');
 
@@ -22,8 +25,12 @@ class AuthService {
         body: jsonEncode({
           "email": email,
           "password": password,
+          "passwordConfirm": passwordConfirm,
           "nickname": name,
           "jobType": jobType.toUpperCase(),
+          "disabilityType": disabilityType,
+          "cognitiveLevel": cognitiveLevel,
+          "code": code,
         }),
       );
 
@@ -47,6 +54,42 @@ class AuthService {
     } catch (e) {
       print("Network Error: $e");
       return {'success': false, 'message': '서버 연결 실패. 네트워크 설정을 확인하세요.'};
+    }
+  }
+
+  // 이메일 인증코드 발송
+  static Future<Map<String, dynamic>> sendEmailCode(String email) async {
+    final url = Uri.parse('$baseUrl/api/auth/email/send');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({"email": email}),
+      );
+      final data = jsonDecode(response.body);
+      return {"success": response.statusCode == 200, "message": data['message']};
+    } catch (e) {
+      return {"success": false, "message": "네트워크 에러가 발생했습니다."};
+    }
+  }
+
+  // 이메일 인증코드 검증
+  static Future<Map<String, dynamic>> verifyEmailCode(String email, String code) async {
+    final url = Uri.parse('$baseUrl/api/auth/email/verify');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({"email": email, "code": code}),
+      );
+      final data = jsonDecode(response.body);
+      // 명세서에 따르면 성공 시 success: true가 내려옴
+      return {
+        "success": data['success'] ?? (response.statusCode == 200),
+        "message": data['message']
+      };
+    } catch (e) {
+      return {"success": false, "message": "네트워크 에러가 발생했습니다."};
     }
   }
 }
