@@ -83,13 +83,58 @@ class AuthService {
         body: jsonEncode({"email": email, "code": code}),
       );
       final data = jsonDecode(response.body);
-      // 명세서에 따르면 성공 시 success: true가 내려옴
       return {
         "success": data['success'] ?? (response.statusCode == 200),
         "message": data['message']
       };
     } catch (e) {
       return {"success": false, "message": "네트워크 에러가 발생했습니다."};
+    }
+  }
+
+  // 비밀번호 재설정
+  static Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String password,
+    required String passwordConfirm,
+  }) async {
+    final url = Uri.parse('$baseUrl/api/users/password/reset');
+
+    try {
+      final response = await http.patch(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "email": email,
+          "password": password,
+          "passwordConfirm": passwordConfirm,
+        }),
+      );
+
+      final responseBody = utf8.decode(response.bodyBytes);
+
+      Map<String, dynamic> data = {};
+      if (responseBody.isNotEmpty) {
+        data = jsonDecode(responseBody);
+      }
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? '비밀번호 변경 성공'
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? '변경 실패: $responseBody'
+        };
+      }
+    } catch (e) {
+      print("Network Error: $e");
+      return {
+        'success': false,
+        'message': '서버 연결 실패'
+      };
     }
   }
 }
