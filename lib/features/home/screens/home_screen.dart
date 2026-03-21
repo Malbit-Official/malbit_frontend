@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../../main_navigation/widgets/bottom_nav.dart';
+import 'calendar_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,6 +28,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   double _participantCount = 0.0;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -145,19 +149,54 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text("잊지 말고 챙겨야 해요",
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 15),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              day("9", true), day("10", false), day("11", false),
-                              day("12", false), day("13", false), day("14", false),
+                              const Text("잊지 말고 챙겨야 해요",
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const CalendarScreen()),
+                                ),
+                                child: const Icon(Icons.chevron_right, color: Colors.grey),
+                              ),
                             ],
+                          ),
+                          const SizedBox(height: 10),
+                          TableCalendar(
+                            locale: 'ko_KR',
+                            firstDay: DateTime.utc(2020, 1, 1),
+                            lastDay: DateTime.utc(2030, 12, 31),
+                            focusedDay: _focusedDay,
+                            calendarFormat: CalendarFormat.week,
+                            headerVisible: false,
+                            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                            onDaySelected: (selectedDay, focusedDay) {
+                              setState(() {
+                                _selectedDay = selectedDay;
+                                _focusedDay = focusedDay;
+                              });
+                            },
+                            daysOfWeekHeight: 20,
+                            calendarStyle: const CalendarStyle(
+                              isTodayHighlighted: true,
+                              todayDecoration: BoxDecoration(color: Color(0x804882FD), shape: BoxShape.circle),
+                              selectedDecoration: BoxDecoration(color: Color(0xff4882FD), shape: BoxShape.circle),
+                            ),
+                            daysOfWeekStyle: const DaysOfWeekStyle(
+                              weekdayStyle: TextStyle(fontSize: 12, color: Colors.grey),
+                              weekendStyle: TextStyle(fontSize: 12, color: Colors.redAccent),
+                            ),
                           ),
                         ],
                       ),
                     ),
+
+
+
+
+
 
                     const SizedBox(height: 28),
 

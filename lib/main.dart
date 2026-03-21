@@ -9,8 +9,12 @@ import 'features/home/screens/home_screen.dart';
 import 'features/main_navigation/screens/main_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('ko_KR', null);
 
   final storage = const FlutterSecureStorage();
   final accessToken = await storage.read(key: 'accessToken');
@@ -22,7 +26,7 @@ void main() async {
     initialRoute = '/main';
   } else {
     log("로그인 필요");
-    initialRoute = '/login';
+    //initialRoute = '/login';
   }
 
   runApp(MyApp(initialRoute: initialRoute));
@@ -38,8 +42,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Malbit',
-
       initialRoute: initialRoute,
+
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ko', 'KR'),
+      ],
 
       routes: {
         '/login': (context) => const LoginScreen(),
