@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:malbit_frontend/features/auth/screens/reset_password.dart';
 import 'package:malbit_frontend/features/auth/screens/signup_screen.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 
 import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/home_screen.dart';
@@ -16,6 +17,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ko_KR', null);
 
+  KakaoSdk.init(
+    nativeAppKey: 'f90beb4e45400ac7959f9e2929295180', // 🔥 여기 필수
+  );
   final storage = const FlutterSecureStorage();
   final accessToken = await storage.read(key: 'accessToken');
 

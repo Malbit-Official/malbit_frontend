@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/core/services/storage.dart';
+import 'package:malbit_frontend/features/auth/services/social_login_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _storage = AppStorage.storage;
+  final _socialLoginService = SocialLoginService();
 
   bool _isLoading = false;
   bool _obscureText = true;
@@ -57,11 +59,22 @@ class _LoginScreenState extends State<LoginScreen> {
         final accessToken = data['accessToken'];
         final refreshToken = data['refreshToken'];
 
+        final name = data['name'];
+        final email = data['email'];
+        final disabilityType = data['disabilityType'];
+        final cognitiveLevel = data['cognitiveLevel'];
+
         if (accessToken != null && refreshToken != null) {
 
           await _storage.write(key: 'tokenType', value: 'Bearer');
           await _storage.write(key: 'accessToken', value: accessToken);
           await _storage.write(key: 'refreshToken', value: refreshToken);
+
+          // ✅ 사용자 정보 저장
+          await _storage.write(key: 'name', value: name ?? "");
+          await _storage.write(key: 'email', value: email ?? "");
+          await _storage.write(key: 'disabilityType', value: disabilityType ?? "");
+          await _storage.write(key: 'cognitiveLevel', value: cognitiveLevel ?? "");
 
           _showSnackBar('로그인 성공!');
 
@@ -88,6 +101,38 @@ class _LoginScreenState extends State<LoginScreen> {
 
       setState(() => _isLoading = false);
 
+    }
+  }
+  // 카카오 로그인
+  Future<void> _handleKakaoLogin() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await _socialLoginService.loginWithKakao();
+
+      _showSnackBar(result['message']);
+
+      if (result['success'] && mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+  // 구글 로그인
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await _socialLoginService.loginWithGoogle();
+
+      _showSnackBar(result['message']);
+
+      if (result['success'] && mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -212,7 +257,37 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: const Text('임시 비밀번호 발급받기 >'),
               ),
+              const SizedBox(height: 20),
 
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: _isLoading ? null : _handleKakaoLogin,
+                    child: Opacity(
+                      opacity: _isLoading ? 0.5 : 1.0,
+                      child: Image.asset(
+                        'assets/images/kakao_logo.png',
+                        width: 70,
+                        height: 70,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 20),
+                  GestureDetector(
+                    onTap: _isLoading ? null : _handleGoogleLogin,
+                    child: Opacity(
+                      opacity: _isLoading ? 0.5 : 1.0,
+                      child: Image.asset(
+                        'assets/images/google_logo.png',
+                        width: 70,
+                        height: 70,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),

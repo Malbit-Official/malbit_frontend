@@ -4,11 +4,16 @@ import 'package:malbit_frontend/features/profile/screens/change_password.dart';
 class EditProfileScreen extends StatefulWidget {
   final String name;
   final String email;
+  final String disabilityType;
+  final String cognitiveLevel;
+
 
   const EditProfileScreen({
-  super.key,
-  required this.name,
-  required this.email,
+    super.key,
+    required this.name,
+    required this.email,
+    required this.disabilityType,
+    required this.cognitiveLevel,
   });
 
   @override
@@ -20,7 +25,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String nickname = "";
   String userName = "";
   String email = "";
-
+  String disabilityType = "";
+  String cognitiveLevel = "";
   bool notificationEnabled = true;
   String language = "한국어";
 
@@ -29,6 +35,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     userName = widget.name;
     email = widget.email;
+    disabilityType = widget.disabilityType;
+    cognitiveLevel = widget.cognitiveLevel;
   }
 
   @override
@@ -103,6 +111,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     );
                   },
                 ),
+                const Divider(),
+
+                ListTile(
+                  title: const Text("장애 유형"),
+                  trailing: Text(disabilityType),
+                  onTap: () {
+                    _showDisabilityDialog();
+                  },
+                ),
+
+                const Divider(),
+
+                ListTile(
+                  title: const Text("인지 수준"),
+                  trailing: Text(cognitiveLevel),
+                  onTap: () {
+                    _showCognitiveDialog();
+                  },
+                ),
+
               ],
             ),
 
@@ -179,6 +207,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     Navigator.pop(context, {
                       "name": userName,
                       "email": email,
+                      "disabilityType": disabilityType,
+                      "cognitiveLevel": cognitiveLevel,
                     });
                   },
 
@@ -331,6 +361,86 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 },
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+  void _showDisabilityDialog() {
+    final options = [
+      "언어장애",
+      "뇌신경장애",
+      "청각장애",
+      "조음장애",
+      "전음성 난청",
+      "감음신경성 난청",
+      "기능성 발성장애",
+      "후두장애",
+      "구강장애",
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("장애 유형 선택"),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: options.map((e) {
+                return ListTile(
+                  title: Text(e),
+                  trailing: disabilityType == e
+                      ? const Icon(Icons.check, color: Colors.blue)
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      disabilityType = e;
+                    });
+                    Navigator.pop(context);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+  void _showCognitiveDialog() {
+    final options = [
+      "1단계: 매우 낮음 (단어 위주 소통)",
+      "2단계: 낮음 (간단한 문장 이해)",
+      "3단계: 보통 (일상 대화 가능)",
+      "4단계: 높음 (추상/비유 이해)",
+      "5단계: 매우 높음 (정교한 소통)",
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("인지 수준 선택"),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: options.map((e) {
+                return ListTile(
+                  title: Text(e),
+                  trailing: cognitiveLevel == e
+                      ? const Icon(Icons.check, color: Colors.blue)
+                      : null,
+                  onTap: () {
+                    setState(() {
+                      cognitiveLevel = e;
+                    });
+                    Navigator.pop(context);
+                  },
+                );
+              }).toList(),
+            ),
           ),
         );
       },
