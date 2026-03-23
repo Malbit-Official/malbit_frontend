@@ -3,6 +3,7 @@ import 'package:malbit_frontend/features/main_navigation/widgets/bottom_nav.dart
 import 'package:malbit_frontend/features/profile/screens/job_environment_screen.dart';
 import 'package:malbit_frontend/features/voice_settings/screens/voice_register_screen.dart';
 import 'package:malbit_frontend/features/profile/screens/edit_profile_screen.dart';
+import 'package:malbit_frontend/core/services/storage.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,8 +17,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String currentJob = "사무직";
   String userName = "사용자 이름";
   String email = "email@naver.com";
+  String disabilityType = "";
+  String cognitiveLevel = "";
   bool notificationEnabled = true;
   bool isLargeButton = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    userName = await AppStorage.storage.read(key: 'name') ?? "";
+    email = await AppStorage.storage.read(key: 'email') ?? "";
+    disabilityType = await AppStorage.storage.read(key: 'disabilityType') ?? "";
+    cognitiveLevel = await AppStorage.storage.read(key: 'cognitiveLevel') ?? "";
+
+    setState(() {});
+  }
 
   void _showDeleteDialog(BuildContext context) {
     showDialog(
@@ -178,6 +196,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           builder: (context) => EditProfileScreen(
                             name: userName,
                             email: email,
+                            disabilityType: disabilityType,
+                            cognitiveLevel: cognitiveLevel,
                           ),
                         ),
                       );
@@ -186,7 +206,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         setState(() {
                           userName = result["name"];
                           email = result["email"];
+                          disabilityType = result["disabilityType"];
+                          cognitiveLevel = result["cognitiveLevel"];
                         });
+
+                        // ✅ 다시 저장 (중요)
+                        await AppStorage.storage.write(key: 'name', value: userName);
+                        await AppStorage.storage.write(key: 'email', value: email);
+                        await AppStorage.storage.write(key: 'disabilityType', value: disabilityType);
+                        await AppStorage.storage.write(key: 'cognitiveLevel', value: cognitiveLevel);
                       }
                     },
                   ),
