@@ -306,7 +306,7 @@ class _OrderScreenState extends State<OrderScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
-                  "# 주문 받기 기본 응대",
+                  "# 주문 받기 # 기본 응대",
                   style: TextStyle(fontSize: 13),
                 ),
               )
@@ -331,7 +331,7 @@ class _OrderScreenState extends State<OrderScreen> {
     return Stack(
       children: [
         Image.asset(
-          'assets/images/coffee_girl.png',
+          'assets/images/coffee_girl.jpg',
           width: double.infinity,
           height: 220,
           fit: BoxFit.cover,

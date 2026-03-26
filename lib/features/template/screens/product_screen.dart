@@ -324,7 +324,7 @@ class _ProductScreenState extends State<ProductScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
-                  "# 기본 응대",
+                  "# 주문 응대",
                   style: TextStyle(fontSize: 13),
                 ),
               )
@@ -349,7 +349,7 @@ class _ProductScreenState extends State<ProductScreen> {
     return Stack(
       children: [
         Image.asset(
-          'assets/images/shopping_girl.png',
+          'assets/images/shopping_girl.jpg',
           width: double.infinity,
           height: 220,
           fit: BoxFit.cover,
