@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:malbit_frontend/features/profile/screens/change_password.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:malbit_frontend/core/services/storage.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final String name;
@@ -25,6 +28,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String nickname = "";
   String userName = "";
   String email = "";
+  String currentJob = "";
   String disabilityType = "";
   String cognitiveLevel = "";
   bool notificationEnabled = true;
@@ -37,6 +41,66 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     email = widget.email;
     disabilityType = widget.disabilityType;
     cognitiveLevel = widget.cognitiveLevel;
+  }
+  String convertDisability(String value) {
+    switch (value) {
+      case "언어장애": return "LANGUAGE";
+      case "뇌신경장애": return "CRANIAL_NERVE";
+      case "청각장애": return "HEARING";
+      case "조음장애": return "ARTICULATION";
+      case "전음성 난청": return "CONDUCTIVE_HEARING";
+      case "감음신경성 난청": return "SENSORINEURAL_HEARING";
+      case "기능성 발성장애": return "FUNCTIONAL_VOICE";
+      case "후두장애": return "LARYNGEAL";
+      case "구강장애": return "ORAL";
+      default: return "LANGUAGE";
+    }
+  }
+
+  String convertJobToEnglish(String job) {
+    switch (job) {
+      case "사무직":
+        return "OFFICE";
+      case "영업 / 고객상담":
+        return "SALES";
+      case "의료 / 간호":
+        return "MEDICAL";
+      case "교육 / 학교":
+        return "EDUCATION";
+      case "서비스 / 매장":
+        return "SERVICE";
+      case "기타":
+        return "ETC";
+      default:
+        return "OFFICE";
+    }
+  }
+  String convertCognitive(String value) {
+    if (value.startsWith("1")) return "LEVEL_1";
+    if (value.startsWith("2")) return "LEVEL_2";
+    if (value.startsWith("3")) return "LEVEL_3";
+    if (value.startsWith("4")) return "LEVEL_4";
+    if (value.startsWith("5")) return "LEVEL_5";
+    return "LEVEL_1";
+  }
+
+  Future<void> _updateProfile() async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    final response = await http.patch(
+      Uri.parse('http://10.0.2.2:8080/api/users/settings'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        "jobType": convertJobToEnglish(currentJob),
+        "disabilityType": convertDisability(disabilityType),
+        "cognitiveLevel": convertCognitive(cognitiveLevel),
+      }),
+    );
+
+    print("수정 응답: ${response.body}");
   }
 
   @override
@@ -203,7 +267,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 30),
 
                 GestureDetector(
-                  onTap: () {
+                  onTap: () async {
+
+                    await _updateProfile(); // ⭐️ 서버 저장
+
                     Navigator.pop(context, {
                       "name": userName,
                       "email": email,

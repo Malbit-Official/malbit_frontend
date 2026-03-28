@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/features/main_navigation/widgets/bottom_nav.dart';
 import 'package:malbit_frontend/features/profile/screens/job_environment_screen.dart';
 import 'package:malbit_frontend/features/voice_settings/screens/voice_register_screen.dart';
@@ -22,19 +24,101 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool notificationEnabled = true;
   bool isLargeButton = false;
 
+  int totalCorrection = 0;
+  int averageIntensity = 0;
+  int completedRoleplays = 0;
+  int generatedSummaries = 0;
+
   @override
   void initState() {
     super.initState();
     _loadUserInfo();
+    _loadStatistics();
+  }
+
+  String convertJobToEnglish(String job) {
+    switch (job) {
+      case "사무직": return "OFFICE";
+      case "영업 / 고객상담": return "SALES";
+      case "의료 / 간호": return "MEDICAL";
+      case "교육 / 학교": return "EDUCATION";
+      case "서비스 / 매장": return "SERVICE";
+      case "기타": return "ETC";
+      default: return "OFFICE";
+    }
   }
 
   Future<void> _loadUserInfo() async {
-    userName = await AppStorage.storage.read(key: 'name') ?? "";
-    email = await AppStorage.storage.read(key: 'email') ?? "";
-    disabilityType = await AppStorage.storage.read(key: 'disabilityType') ?? "";
-    cognitiveLevel = await AppStorage.storage.read(key: 'cognitiveLevel') ?? "";
+    try {
+      final token = await AppStorage.storage.read(key: 'accessToken');
 
-    setState(() {});
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8080/api/users/me'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+
+        setState(() {
+          userName = data['data']['name'] ?? "";
+          email = data['data']['email'] ?? "";
+          currentJob = data['data']['jobType'] ?? "";
+          disabilityType = data['data']['disabilityType'] ?? "";
+          cognitiveLevel = data['data']['cognitiveLevel'] ?? "";
+        });
+      }
+
+    } catch (e) {
+      print("유저 정보 API 오류: $e");
+    }
+  }
+
+  Future<void> _loadStatistics() async {
+    try {
+      final token = await AppStorage.storage.read(key: 'accessToken');
+
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8080/api/users/statistics'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+
+        setState(() {
+          totalCorrection = data['data']['totalCorrectionCount'];
+          averageIntensity = data['data']['averageCorrectionIntensity'];
+          completedRoleplays = data['data']['completedRoleplays'];
+          generatedSummaries = data['data']['generatedSummaries'];
+        });
+      }
+
+    } catch (e) {
+      print("통계 API 오류: $e");
+    }
+  }
+  Future<void> _updateJob() async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    final response = await http.patch(
+      Uri.parse('http://10.0.2.2:8080/api/users/settings'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        "jobType": convertJobToEnglish(currentJob),
+      }),
+    );
+
+    print("직무 변경 응답: ${response.body}");
   }
 
   void _showDeleteDialog(BuildContext context) {
@@ -265,6 +349,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             setState(() {
                               currentJob = result;
                             });
+                            await _updateJob();
                           }
 
                         },
@@ -369,11 +454,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 childAspectRatio: 3,
-                children: const [
-                  _StatTile(title: "총 보정 횟수", value: "30"),
-                  _StatTile(title: "평균 보정 강도", value: "60%"),
-                  _StatTile(title: "완료한 상황극", value: "7"),
-                  _StatTile(title: "생성한 요약", value: "10"),
+                children: [
+                  _StatTile(title: "총 보정 횟수", value: "$totalCorrection"),
+                  _StatTile(title: "평균 보정 강도", value: "$averageIntensity%"),
+                  _StatTile(title: "완료한 상황극", value: "$completedRoleplays"),
+                  _StatTile(title: "생성한 요약", value: "$generatedSummaries"),
                 ],
               ),
             ),
