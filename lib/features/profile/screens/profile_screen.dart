@@ -120,6 +120,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     print("직무 변경 응답: ${response.body}");
   }
+  Future<void> _logout() async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8080/api/users/logout'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      print("로그아웃 응답: ${response.body}");
+
+    } catch (e) {
+      print("로그아웃 오류: $e");
+    }
+
+    /// ⭐️ 로컬 토큰 삭제 (중요)
+    await AppStorage.storage.deleteAll();
+
+    /// 로그인 화면 이동
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+            (route) => false,
+      );
+    }
+  }
 
   void _showDeleteDialog(BuildContext context) {
     showDialog(
@@ -183,15 +212,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red[100],),
-              onPressed: () {
-
-                /// 로그인 화면으로 이동
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/login',
-                      (route) => false,
-                );
-
+              onPressed: () async {
+                Navigator.pop(context); // 다이얼로그 닫기
+                await _logout();        // ⭐️ 로그아웃 실행
               },
               child: const Text("확인"),
             ),

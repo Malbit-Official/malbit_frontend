@@ -3,6 +3,7 @@ import 'package:malbit_frontend/features/profile/screens/change_password.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/core/services/storage.dart';
+import 'package:malbit_frontend/features/profile/screens/email_change_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final String name;
@@ -101,6 +102,42 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
 
     print("수정 응답: ${response.body}");
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+  Future<bool> _updateEmail() async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    try {
+      final response = await http.patch(
+        Uri.parse('http://10.0.2.2:8080/api/users/email'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          "newEmail": email,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      print("이메일 변경 응답: $data");
+
+      if (response.statusCode == 200 && data['status'] == 'SUCCESS') {
+        return true;
+      } else {
+        _showSnackBar(data['message'] ?? "이메일 변경 실패");
+        return false;
+      }
+
+    } catch (e) {
+      _showSnackBar("이메일 변경 오류");
+      return false;
+    }
   }
 
   @override
@@ -208,16 +245,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ListTile(
                   title: const Text("이메일 변경"),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    _showEditDialog(
-                      title: "이메일 변경",
-                      initialValue: email,
-                      onSave: (value) {
-                        setState(() {
-                          email = value;
-                        });
-                      },
+                  onTap: () async {
+
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EmailChangeScreen(
+                          currentEmail: email,
+                        ),
+                      ),
                     );
+
+                    if (result != null) {
+                      setState(() {
+                        email = result;
+                      });
+                    }
                   },
                 ),
 
@@ -269,14 +312,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 GestureDetector(
                   onTap: () async {
 
-                    await _updateProfile(); // ⭐️ 서버 저장
+                    /// 2️⃣ 환경 설정 변경
+                    await _updateProfile();
 
+                    /// 3️⃣ 화면 반영
                     Navigator.pop(context, {
                       "name": userName,
                       "email": email,
                       "disabilityType": disabilityType,
                       "cognitiveLevel": cognitiveLevel,
                     });
+
+                    _showSnackBar("프로필이 저장되었습니다.");
                   },
 
                   child: Container(
