@@ -56,8 +56,8 @@ class _LoginScreenState extends State<LoginScreen> {
         final responseBody = utf8.decode(response.bodyBytes);
         final data = jsonDecode(responseBody);
 
-        final accessToken = data['accessToken'];
-        final refreshToken = data['refreshToken'];
+        final accessToken = data['data']['accessToken'];
+        final refreshToken = data['data']['refreshToken'];
 
         final name = data['name'];
         final email = data['email'];

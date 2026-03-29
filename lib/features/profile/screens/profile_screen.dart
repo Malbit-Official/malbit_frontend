@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/features/main_navigation/widgets/bottom_nav.dart';
 import 'package:malbit_frontend/features/profile/screens/job_environment_screen.dart';
 import 'package:malbit_frontend/features/voice_settings/screens/voice_register_screen.dart';
@@ -21,20 +24,150 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String cognitiveLevel = "";
   bool notificationEnabled = true;
   bool isLargeButton = false;
+  String? profileImagePath;
+
+  int totalCorrection = 0;
+  int averageIntensity = 0;
+  int completedRoleplays = 0;
+  int generatedSummaries = 0;
 
   @override
   void initState() {
     super.initState();
     _loadUserInfo();
+    _loadStatistics();
+  }
+
+  String convertJobToEnglish(String job) {
+    switch (job) {
+      case "사무직": return "OFFICE";
+      case "영업 / 고객상담": return "SALES";
+      case "의료 / 간호": return "MEDICAL";
+      case "교육 / 학교": return "EDUCATION";
+      case "서비스 / 매장": return "SERVICE";
+      case "기타": return "ETC";
+      default: return "OFFICE";
+    }
   }
 
   Future<void> _loadUserInfo() async {
-    userName = await AppStorage.storage.read(key: 'name') ?? "";
-    email = await AppStorage.storage.read(key: 'email') ?? "";
-    disabilityType = await AppStorage.storage.read(key: 'disabilityType') ?? "";
-    cognitiveLevel = await AppStorage.storage.read(key: 'cognitiveLevel') ?? "";
+    try {
+      final token = await AppStorage.storage.read(key: 'accessToken');
 
-    setState(() {});
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8080/api/users/me'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+
+        setState(() {
+          userName = data['data']['name'] ?? "";
+          email = data['data']['email'] ?? "";
+          currentJob = data['data']['jobType'] ?? "";
+          disabilityType = data['data']['disabilityType'] ?? "";
+          cognitiveLevel = data['data']['cognitiveLevel'] ?? "";
+        });
+      }
+
+    } catch (e) {
+      print("유저 정보 API 오류: $e");
+    }
+  }
+  Future<void> uploadProfileImage(File image) async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://10.0.2.2:8080/api/users/profile-image'),
+    );
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.files.add(
+      await http.MultipartFile.fromPath('file', image.path),
+    );
+
+    var response = await request.send();
+
+    print("이미지 업로드: ${response.statusCode}");
+  }
+
+  Future<void> _loadStatistics() async {
+    try {
+      final token = await AppStorage.storage.read(key: 'accessToken');
+
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8080/api/users/statistics'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+
+        setState(() {
+          totalCorrection = data['data']['totalCorrectionCount'];
+          averageIntensity = data['data']['averageCorrectionIntensity'];
+          completedRoleplays = data['data']['completedRoleplays'];
+          generatedSummaries = data['data']['generatedSummaries'];
+        });
+      }
+
+    } catch (e) {
+      print("통계 API 오류: $e");
+    }
+  }
+  Future<void> _updateJob() async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    final response = await http.patch(
+      Uri.parse('http://10.0.2.2:8080/api/users/settings'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        "jobType": convertJobToEnglish(currentJob),
+      }),
+    );
+
+    print("직무 변경 응답: ${response.body}");
+  }
+  Future<void> _logout() async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8080/api/users/logout'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      print("로그아웃 응답: ${response.body}");
+
+    } catch (e) {
+      print("로그아웃 오류: $e");
+    }
+
+    /// ⭐️ 로컬 토큰 삭제 (중요)
+    await AppStorage.storage.deleteAll();
+
+    /// 로그인 화면 이동
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+            (route) => false,
+      );
+    }
   }
 
   void _showDeleteDialog(BuildContext context) {
@@ -99,15 +232,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red[100],),
-              onPressed: () {
-
-                /// 로그인 화면으로 이동
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/login',
-                      (route) => false,
-                );
-
+              onPressed: () async {
+                Navigator.pop(context); // 다이얼로그 닫기
+                await _logout();        // ⭐️ 로그아웃 실행
               },
               child: const Text("확인"),
             ),
@@ -149,12 +276,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Row(
                 children: [
 
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 35,
-                    backgroundImage:
-                    AssetImage('assets/images/profile.png'),
+                    backgroundImage: profileImagePath != null
+                        ? NetworkImage(profileImagePath!)
+                        : const AssetImage('assets/images/profile.png') as ImageProvider,
                   ),
-
                   const SizedBox(width: 16),
 
                   Expanded(
@@ -208,6 +335,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           email = result["email"];
                           disabilityType = result["disabilityType"];
                           cognitiveLevel = result["cognitiveLevel"];
+                          profileImagePath = result["image"];
                         });
 
                         // ✅ 다시 저장 (중요)
@@ -265,6 +393,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             setState(() {
                               currentJob = result;
                             });
+                            await _updateJob();
                           }
 
                         },
@@ -369,11 +498,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 childAspectRatio: 3,
-                children: const [
-                  _StatTile(title: "총 보정 횟수", value: "30"),
-                  _StatTile(title: "평균 보정 강도", value: "60%"),
-                  _StatTile(title: "완료한 상황극", value: "7"),
-                  _StatTile(title: "생성한 요약", value: "10"),
+                children: [
+                  _StatTile(title: "총 보정 횟수", value: "$totalCorrection"),
+                  _StatTile(title: "평균 보정 강도", value: "$averageIntensity%"),
+                  _StatTile(title: "완료한 상황극", value: "$completedRoleplays"),
+                  _StatTile(title: "생성한 요약", value: "$generatedSummaries"),
                 ],
               ),
             ),

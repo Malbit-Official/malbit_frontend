@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:malbit_frontend/core/services/storage.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -31,7 +34,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   }
 
   /// 비밀번호 변경
-  void _handleChangePassword() {
+  void _handleChangePassword() async {
 
     if (!_formKey.currentState!.validate()) return;
 
@@ -44,21 +47,43 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       isLoading = true;
     });
 
-    /// TODO
-    /// 비밀번호 변경 API 연결
+    try {
+      final token = await AppStorage.storage.read(key: 'accessToken');
 
-    Future.delayed(const Duration(seconds: 1), () {
+      final response = await http.patch(
+        Uri.parse('http://10.0.2.2:8080/api/users/password'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          "oldPassword": currentPasswordController.text,
+          "newPassword": newPasswordController.text,
+        }),
+      );
 
-      setState(() {
-        isLoading = false;
-      });
+      final data = jsonDecode(response.body);
+      print("비밀번호 변경 응답: $data");
 
-      _showSnackBar("비밀번호가 변경되었습니다.");
+      if (response.statusCode == 200 && data['status'] == 'SUCCESS') {
 
-      Navigator.pop(context);
+        _showSnackBar("비밀번호가 변경되었습니다.");
+
+        Navigator.pop(context);
+
+      } else {
+        _showSnackBar(data['message'] ?? "변경 실패");
+      }
+
+    } catch (e) {
+      _showSnackBar("서버 오류 발생");
+      print("에러: $e");
+    }
+
+    setState(() {
+      isLoading = false;
     });
   }
-
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
