@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/core/services/storage.dart';
 import 'package:malbit_frontend/features/profile/screens/email_change_screen.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class EditProfileScreen extends StatefulWidget {
   final String name;
@@ -34,6 +36,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String cognitiveLevel = "";
   bool notificationEnabled = true;
   String language = "한국어";
+  File? _profileImage;
 
   @override
   void initState() {
@@ -140,6 +143,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
+  Future<String?> uploadProfileImage(File image) async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://10.0.2.2:8080/api/users/profile-image'),
+    );
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.files.add(
+      await http.MultipartFile.fromPath('file', image.path),
+    );
+
+    var response = await request.send();
+
+    final resBody = await response.stream.bytesToString();
+    final data = jsonDecode(resBody);
+
+    print("이미지 업로드 응답: $data");
+
+    if (response.statusCode == 200) {
+      return data['data']['imageUrl'];
+    }
+
+    return null;
+  }
   @override
   Widget build(BuildContext context) {
 
@@ -164,16 +204,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               children: [
 
                 ListTile(
-                  leading: const CircleAvatar(
+                  leading: CircleAvatar(
                     radius: 20,
-                    backgroundImage:
-                    AssetImage('assets/images/profile.png'),
+                    backgroundImage: _profileImage != null
+                        ? FileImage(_profileImage!)
+                        : const AssetImage('assets/images/profile.png') as ImageProvider,
                   ),
                   title: const Text("프로필 사진 변경"),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
-                    /// TODO
                     /// 이미지 선택 기능
+                    _pickImage();
                   },
                 ),
 
@@ -313,6 +354,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onTap: () async {
 
                     /// 2️⃣ 환경 설정 변경
+                    String? imageUrl;
+
+                    if (_profileImage != null) {
+                      imageUrl = await uploadProfileImage(_profileImage!);
+                    }
+
                     await _updateProfile();
 
                     /// 3️⃣ 화면 반영
@@ -321,6 +368,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       "email": email,
                       "disabilityType": disabilityType,
                       "cognitiveLevel": cognitiveLevel,
+                      "image": imageUrl,
                     });
 
                     _showSnackBar("프로필이 저장되었습니다.");

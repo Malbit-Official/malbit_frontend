@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/features/main_navigation/widgets/bottom_nav.dart';
 import 'package:malbit_frontend/features/profile/screens/job_environment_screen.dart';
@@ -23,6 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String cognitiveLevel = "";
   bool notificationEnabled = true;
   bool isLargeButton = false;
+  String? profileImagePath;
 
   int totalCorrection = 0;
   int averageIntensity = 0;
@@ -75,6 +77,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       print("유저 정보 API 오류: $e");
     }
+  }
+  Future<void> uploadProfileImage(File image) async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://10.0.2.2:8080/api/users/profile-image'),
+    );
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.files.add(
+      await http.MultipartFile.fromPath('file', image.path),
+    );
+
+    var response = await request.send();
+
+    print("이미지 업로드: ${response.statusCode}");
   }
 
   Future<void> _loadStatistics() async {
@@ -256,12 +276,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Row(
                 children: [
 
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 35,
-                    backgroundImage:
-                    AssetImage('assets/images/profile.png'),
+                    backgroundImage: profileImagePath != null
+                        ? NetworkImage(profileImagePath!)
+                        : const AssetImage('assets/images/profile.png') as ImageProvider,
                   ),
-
                   const SizedBox(width: 16),
 
                   Expanded(
@@ -315,6 +335,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           email = result["email"];
                           disabilityType = result["disabilityType"];
                           cognitiveLevel = result["cognitiveLevel"];
+                          profileImagePath = result["image"];
                         });
 
                         // ✅ 다시 저장 (중요)
