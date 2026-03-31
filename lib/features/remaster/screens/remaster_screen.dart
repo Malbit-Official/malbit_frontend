@@ -1,16 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 
+import '../../../core/services/storage.dart';
+import '../services/remaster_service.dart';
 import 'expand_text_screens.dart';
 
-void main() {
-  runApp(const MaterialApp(
-    home: RemasterScreen(),
-    debugShowCheckedModeBanner: false,
-  ));
+class RemasterScreen extends StatefulWidget {
+  const RemasterScreen({super.key});
+
+  @override
+  State<RemasterScreen> createState() => _RemasterScreenState();
 }
 
-class RemasterScreen extends StatelessWidget {
-  const RemasterScreen({super.key});
+class _RemasterScreenState extends State<RemasterScreen> {
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  final _storage = AppStorage.storage;
+
+  // 상태 관리 변수
+  bool _isRecording = false;
+  bool _isLoading = false;
+  String _originalText = "마이크를 눌러 말을 시작해보세요.";
+  String _refinedText = "...";
+
+  @override
+  void dispose() {
+    _audioRecorder.dispose();
+    super.dispose();
+  }
+
+  // 로직: 마이크 버튼 클릭 핸들러
+  Future<void> _handleMicAction() async {
+    if (_isRecording) {
+      final path = await _audioRecorder.stop();
+      setState(() => _isRecording = false);
+      if (path != null) _sendAudio(path);
+    } else {
+      if (await _audioRecorder.hasPermission()) {
+        final dir = await getApplicationDocumentsDirectory();
+        final path = '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        await _audioRecorder.start(const RecordConfig(), path: path);
+        setState(() => _isRecording = true);
+      }
+    }
+  }
+
+  // 로직: 서버 전송
+  Future<void> _sendAudio(String path) async {
+    setState(() => _isLoading = true);
+
+    final token = await _storage.read(key: 'accessToken') ?? "";
+    final result = await RemasterService.uploadAudio(filePath: path, token: token);
+
+    print("보내는 토큰 확인: [$token]");
+
+    if (result['success']) {
+      setState(() {
+        _originalText = result['originalSpeech'];
+        _refinedText = result['refinedText'];
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+    }
+    setState(() => _isLoading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,16 +93,12 @@ class RemasterScreen extends StatelessWidget {
                 '더 정확하고 자연스러운 표현으로 바꿔드릴게요.',
                 style: TextStyle(color: Colors.grey[600], fontSize: 15),
               ),
-              const SizedBox(height: 55),
+              const SizedBox(height: 65),
 
               // 잘못된 문장 섹션
               _sectionTitle('이렇게 들려요.', Icons.hearing_rounded, Colors.black),
               const SizedBox(height: 12),
-              _messageBox(
-                context,
-                '주임니... 이 더류.. 복사 ㅏ ...',
-                isHighlighted: false,
-              ),
+              _messageBox(context, _originalText, isHighlighted: false),
               const SizedBox(height: 35),
 
               // AI 교정 문장 섹션
@@ -57,11 +106,12 @@ class RemasterScreen extends StatelessWidget {
               const SizedBox(height: 12),
               _messageBox(
                 context,
-                '주임님, 요청하신 서류\n복사 완료했습니다.',
+                _refinedText,
                 isHighlighted: true,
                 showActions: true,
               ),
-              const SizedBox(height: 50),
+
+              const SizedBox(height: 55),
 
               // 마이크 버튼 레이아웃
               Align(
@@ -69,22 +119,26 @@ class RemasterScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     GestureDetector(
-                      onTap: () {},
+                      onTap: _handleMicAction,
                       child: Container(
                         width: 70,
                         height: 70,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4882FD),
+                          color: _isRecording ? Colors.redAccent : const Color(0xFF4882FD),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF4882FD).withOpacity(0.3),
+                              color: (_isRecording ? Colors.redAccent : const Color(0xFF4882FD)).withOpacity(0.3),
                               blurRadius: 15,
                               offset: const Offset(0, 8),
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.mic_none_rounded, color: Colors.white, size: 45),
+                        child: Icon(
+                            _isRecording ? Icons.stop_rounded : Icons.mic_none_rounded,
+                            color: Colors.white,
+                            size: 45
+                        ),
                       ),
                     ),
                     const SizedBox(height: 30),
@@ -145,8 +199,17 @@ class RemasterScreen extends StatelessWidget {
         children: [
           // 텍스트 영역
           Padding(
-            padding: EdgeInsets.fromLTRB(25, 40, 25, showActions ? 40 : 35),
-            child: Text(
+            padding: const EdgeInsets.fromLTRB(25, 40, 25, 40),
+            child: _isLoading
+                ? const SizedBox(
+              height: 32,
+              width: 32,
+              child: CircularProgressIndicator(
+                color: Color(0xFF4882FD),
+                strokeWidth: 3,
+              ),
+            )
+                : Text(
               text,
               style: TextStyle(
                 fontSize: 20,
@@ -154,6 +217,7 @@ class RemasterScreen extends StatelessWidget {
                 fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.w400,
                 color: isHighlighted ? Colors.black : Colors.grey[600],
               ),
+              textAlign: TextAlign.center,
             ),
           ),
 
