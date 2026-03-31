@@ -71,6 +71,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           currentJob = data['data']['jobType'] ?? "";
           disabilityType = data['data']['disabilityType'] ?? "";
           cognitiveLevel = data['data']['cognitiveLevel'] ?? "";
+          profileImagePath = data['data']['profileImage'];
+
         });
       }
 
