@@ -21,9 +21,9 @@ class _MainScreenState extends State<MainScreen> {
   // 각 탭에 들어갈 화면들
   final List<Widget> _pages = [
     const RemasterScreen(),     // 0: AI
-    const TemplateScreen(),     // 1: 추천
+    const RoleplayListScreen(),     // 1: 추천
     const HomeScreen(),         // 2: 홈 (Scaffold에서 bottomNav가 제거된 버전)
-    const RoleplayListScreen(), // 3: 학습
+    const TemplateScreen(), // 3: 학습
     const RecordScreen(),      // 4: 기록
   ];
 

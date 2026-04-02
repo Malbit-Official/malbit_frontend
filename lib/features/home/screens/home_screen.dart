@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../main_navigation/widgets/bottom_nav.dart';
 import 'calendar_screen.dart';
+import 'package:malbit_frontend/features/roleplay/screens/roleplay_list_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -221,7 +222,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20)),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RoleplayListScreen(),
+                            ),
+                          );
+                        },
                         child: const Text(
                           "상황별 발화 추천받기\nclick!",
                           textAlign: TextAlign.center,
