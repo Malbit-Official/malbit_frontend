@@ -57,7 +57,7 @@ class TemplateScreen extends StatelessWidget {
                   _TemplateCard(
                     title: "상품 안내하기 👜",
                     hashtags: "# 재고 # 가격 # 안내",
-                    imagePath: "assets/images/product.png",
+                    imagePath: "assets/images/product_order.png",
                     onTap: () {
                       Navigator.push(
                         context,
