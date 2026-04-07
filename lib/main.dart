@@ -30,7 +30,7 @@ void main() async {
     initialRoute = '/main';
   } else {
     log("로그인 필요");
-    initialRoute = '/login';
+    //initialRoute = '/login';
   }
 
   runApp(MyApp(initialRoute: initialRoute));
