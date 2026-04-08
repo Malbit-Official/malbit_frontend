@@ -180,6 +180,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     return null;
   }
+  Future<bool> _updateName(String newName) async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    try {
+      final response = await http.patch(
+        Uri.parse('http://10.0.2.2:8080/api/users/name'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          "newName": newName,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      print("이름 변경 응답: $data");
+
+      if (response.statusCode == 200 && data['status'] == 'SUCCESS') {
+        return true;
+      } else {
+        _showSnackBar(data['message'] ?? "이름 변경 실패");
+        return false;
+      }
+    } catch (e) {
+      _showSnackBar("이름 변경 오류");
+      return false;
+    }
+  }
   @override
   Widget build(BuildContext context) {
 
@@ -227,10 +256,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     _showEditDialog(
                       title: "이름 변경",
                       initialValue: userName,
-                      onSave: (value) {
-                        setState(() {
-                          userName = value;
-                        });
+                      onSave: (value) async {
+                        final success = await _updateName(value);
+
+                        if (success) {
+                          setState(() {
+                            userName = value;
+                          });
+                        }
                       },
                     );
                   },
