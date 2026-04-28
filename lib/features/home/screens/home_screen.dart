@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:malbit_frontend/features/main_navigation/screens/main_screen.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../main_navigation/widgets/bottom_nav.dart';
+import '../../record/screens/record_screen.dart';
 import 'calendar_screen.dart';
 import 'package:malbit_frontend/features/roleplay/screens/roleplay_list_screen.dart';
 
@@ -301,8 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Center(
                             child: GestureDetector(
                               onTap: () {
-                                print("녹음 시작");
-                                // 여기에 녹음 관련 로직을 넣으세요.
+                                MainScreen.mainScreenState?.setTabIndex(4);
                               },
                               child: Image.asset(
                                 "assets/images/Rec_Button.png", // 여기에 준비하신 녹음 버튼 이미지 경로를 넣으세요

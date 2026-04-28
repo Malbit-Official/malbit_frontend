@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 
-class SummaryScreen extends StatefulWidget { // StatefulWidget으로 변경
+import '../../../core/services/storage.dart';
+import '../models/log_detail.dart';
+import '../services/log_service.dart';
+
+class SummaryScreen extends StatefulWidget {
+  final int logId;
   final String meetingTitle;
   final String dateTimeText;
   final String durationText;
 
   const SummaryScreen({
     super.key,
+    required this.logId,
     required this.meetingTitle,
     required this.dateTimeText,
     required this.durationText,
@@ -17,82 +23,73 @@ class SummaryScreen extends StatefulWidget { // StatefulWidget으로 변경
 }
 
 class _SummaryScreenState extends State<SummaryScreen> {
-  // 사용자가 입력한 메모들을 저장할 리스트 변수
+  final _storage = AppStorage.storage;
+  Future<Map<String, dynamic>>? _logDetailFuture;
   List<String> userMemos = [];
 
-  // 메모 입력창(BottomSheet)을 띄우는 함수
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  void _loadData() async {
+    final token = await _storage.read(key: 'accessToken') ?? "";
+    setState(() {
+      _logDetailFuture = LogService.getLogDetail(
+        token: token,
+        logId: widget.logId,
+      );
+    });
+  }
+
   void _showMemoSheet(BuildContext context) {
     final TextEditingController memoController = TextEditingController();
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Container(
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+          padding: const EdgeInsets.all(25),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('메모 추가', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 15),
+              TextField(
+                controller: memoController,
+                maxLines: 5,
+                decoration: InputDecoration(
+                  hintText: '내용을 입력해주세요...',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFEBEBEB))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFF4882FD), width: 2)),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (memoController.text.trim().isNotEmpty) {
+                      setState(() { userMemos.add(memoController.text.trim()); });
+                    }
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4882FD), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+                  child: const Text('저장하기', style: TextStyle(color: Colors.white, fontSize: 16)),
+                ),
+              ),
+            ],
           ),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-            ),
-            padding: const EdgeInsets.all(25),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '메모 추가',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: memoController,
-                  maxLines: 5,
-                  decoration: InputDecoration(
-                    hintText: '내용을 입력해주세요...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: const BorderSide(color: Color(0xFFEBEBEB)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: const BorderSide(color: Color(0xFF4882FD), width: 2),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (memoController.text.trim().isNotEmpty) {
-                        // 1. 상태 업데이트: 메모 리스트에 추가
-                        setState(() {
-                          userMemos.add(memoController.text);
-                        });
-                      }
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4882FD),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                    child: const Text('저장하기', style: TextStyle(color: Colors.white, fontSize: 16)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -101,7 +98,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
     required String emoji,
     required String title,
     required List<String> bullets,
-    Color? titleColor, // 제목 색상 커스텀용
+    Color? titleColor,
   }) {
     return Container(
       width: double.infinity,
@@ -163,138 +160,68 @@ class _SummaryScreenState extends State<SummaryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F6F6),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // 상단 헤더 영역
-            Container(
-              width: double.infinity,
-              color: Colors.white,
-              padding: const EdgeInsets.only(bottom: 30),
-              child: Column(
-                children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10, top: 20),
-                      child: IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.arrow_back_ios_new, size: 25, color: Colors.black),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Text(
-                      widget.meetingTitle,
-                      style: const TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                        letterSpacing: -0.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    '${widget.dateTimeText}  -  ${widget.durationText}',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF868686),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _logDetailFuture,
+        builder: (context, snapshot) {
+          // 데이터 대기 중일 때만 로딩 표시
+          if (_logDetailFuture == null || snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: Color(0xFF4882FD)));
+          }
 
-            // 요약 탭
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: const BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: Color(0xFFCECECE), width: 1.2),
-                ),
-              ),
-              child: const Center(
-                child: Text(
-                  '요약',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
+          // 서버 데이터 성공 여부 판단 후 가짜 데이터 결합
+          final LogDetail detail = (snapshot.hasData && snapshot.data?['success'] == true)
+              ? snapshot.data!['detail']
+              : LogDetail(
+            logId: widget.logId,
+            title: widget.meetingTitle,
+            date: widget.dateTimeText.split(' ')[0],
+            startTime: widget.dateTimeText.split(' ')[1],
+            duration: widget.durationText,
+            summaries: ['메인 페이지 및 로그인 UI 완료', '백엔드 API 기본 구조 완성', 'API 인증 로직 관련 지연 사항 논의'],
+            decisions: ['이번 주 안으로 API 명세 확정', '디자인 피드백 반영 후 수정'],
+            todos: [TodoItem(assignee: '참여자 3', content: 'API 응답 문서 정리')],
+          );
 
-            // --- 본문 스크롤 영역 ---
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 25),
-                child: Column(
-                  children: [
-                    _sectionCard(
-                      emoji: '📌',
-                      title: '회의에서 이런 이야기가 나왔어요',
-                      bullets: [
-                        '메인 페이지 및 로그인 UI는 거의 완료',
-                        '백엔드 API 기본 구조는 완성되었으나, 인증 로직 문제로 일정 일부 지연',
-                        'API 응답 형식 미확정으로 프론트엔드 연동 작업이 부분적으로 지연',
-                        '대시보드 디자인에서 그래프 표현 방식에 대한 추가 논의 필요',
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    _sectionCard(
-                      emoji: '✅',
-                      title: '회의에서 정한 내용이에요',
-                      bullets: [
-                        '이번 주 안으로 백엔드 API 명세 확정',
-                        '대시보드 디자인 수정 및 피드백 반영',
-                        '다음 회의에서 실제 API 연동 화면 공유',
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    _sectionCard(
-                      emoji: '📝',
-                      title: '앞으로 해야 할 일이에요',
-                      bullets: [
-                        '참여자 3: API 응답 형식 문서 정리 후 금요일까지 공유',
-                        '참여자 2: API 명세 확정 후 연동 작업 진행',
-                        '참여자 4: 대시보드 그래프 디자인 수정안 준비',
-                      ],
-                    ),
-
-                    // 사용자 메모
-                    if (userMemos.isNotEmpty) ...[
-                      const SizedBox(height: 30),
-                      _sectionCard(
-                        emoji: '💡',
-                        title: '내가 추가한 메모',
-                        titleColor: const Color(0xFF4882FD),
-                        bullets: userMemos,
-                      ),
+          return SafeArea(
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  color: Colors.white,
+                  padding: const EdgeInsets.only(bottom: 30),
+                  child: Column(
+                    children: [
+                      Align(alignment: Alignment.topLeft, child: Padding(padding: const EdgeInsets.only(left: 10, top: 20), child: IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.arrow_back_ios_new, size: 25, color: Colors.black)))),
+                      const SizedBox(height: 10),
+                      Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: Text(detail.title, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black), textAlign: TextAlign.center)),
+                      const SizedBox(height: 12),
+                      Text('${detail.date} ${detail.startTime}  -  ${detail.duration}', style: const TextStyle(fontSize: 15, color: Color(0xFF868686))),
                     ],
-
-                    const SizedBox(height: 30),
-
-                    // 메모하기 버튼
-                    TextButton(
-                      onPressed: () => _showMemoSheet(context),
-                      child: const Text(
-                        '메모하기',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF4882FD),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+                  ),
                 ),
-              ),
+                Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 16), decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFCECECE), width: 1.2))), child: const Center(child: Text('요약', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)))),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 25),
+                    child: Column(
+                      children: [
+                        _sectionCard(emoji: '📌', title: '회의에서 이런 이야기가 나왔어요', bullets: detail.summaries),
+                        const SizedBox(height: 30),
+                        _sectionCard(emoji: '✅', title: '회의에서 정한 내용이에요', bullets: detail.decisions),
+                        const SizedBox(height: 30),
+                        _sectionCard(emoji: '📝', title: '앞으로 해야 할 일이에요', bullets: detail.todos.map((t) => "[${t.assignee}] ${t.content}").toList()),
+                        if (userMemos.isNotEmpty) ...[const SizedBox(height: 30), _sectionCard(emoji: '💡', title: '내가 추가한 메모', titleColor: const Color(0xFF4882FD), bullets: userMemos)],
+                        const SizedBox(height: 30),
+                        TextButton(onPressed: () => _showMemoSheet(context), child: const Text('메모하기', style: TextStyle(fontSize: 17, color: Color(0xFF4882FD)))),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
