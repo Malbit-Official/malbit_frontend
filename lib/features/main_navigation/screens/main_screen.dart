@@ -10,6 +10,8 @@ import 'package:malbit_frontend/features/main_navigation/widgets/bottom_nav.dart
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
+  static _MainScreenState? mainScreenState;
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -17,6 +19,18 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
 
   int _currentIndex = 2;
+
+  @override
+  void initState() {
+    super.initState();
+    MainScreen.mainScreenState = this;
+  }
+
+  void setTabIndex(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   // 각 탭에 들어갈 화면들
   final List<Widget> _pages = [

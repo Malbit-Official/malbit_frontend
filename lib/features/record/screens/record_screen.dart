@@ -1,30 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:malbit_frontend/features/record/models/log.dart';
 import 'package:malbit_frontend/features/record/screens/summary_screen.dart';
+import '../../../core/services/storage.dart';
+import '../services/log_service.dart';
 
-class RecordScreen extends StatelessWidget {
+class RecordScreen extends StatefulWidget {
   const RecordScreen({super.key});
 
   @override
+  State<RecordScreen> createState() => _RecordScreenState();
+}
+
+class _RecordScreenState extends State<RecordScreen> {
+  final _storage = AppStorage.storage;
+  Future<Map<String, dynamic>>? _logsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLogs();
+  }
+
+  void _fetchLogs() async {
+    final token = await _storage.read(key: 'accessToken') ?? "";
+    final now = DateTime.now();
+    final formattedDate = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+    setState(() {
+      _logsFuture = LogService.getLogs(token: token, date: formattedDate);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final items = [
-      (
-      id: 'meeting-1',
-      title: '프로젝트 중간점검 회의',
-      time: '2026.02.06 10:15',
-      duration: '15분 29초'
-      ),
-      (
-      id: 'meeting-2',
-      title: '보고서 작성 방법 및 마감 기한',
-      time: '2026.02.06 13:28',
-      duration: '10분 16초'
-      ),
-      (
-      id: 'meeting-3',
-      title: '내일 오전 회의 준비',
-      time: '2026.02.06 16:47',
-      duration: '8분 3초'
-      ),
+    // 서버 데이터가 없을 때 보여줄 가짜 데이터 리스트
+    final List<Log> mockItems = [
+      Log(logId: 1, title: '프로젝트 중간점검 회의', time: '2026.04.28 10:15', duration: '15분 29초', type: 'CONFERENCE'),
+      Log(logId: 2, title: '보고서 작성 방법 및 마감 기한', time: '2026.04.28 13:28', duration: '10분 16초', type: 'CONFERENCE'),
+      Log(logId: 3, title: '내일 오전 회의 준비', time: '2026.04.28 16:47', duration: '8분 3초', type: 'CONFERENCE'),
     ];
 
     return Scaffold(
@@ -37,122 +50,86 @@ class RecordScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 40),
               const Center(
-                child: Text(
-                  '오늘의 업무 기록',
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
+                child: Text('오늘의 업무 기록', style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.black)),
               ),
               const SizedBox(height: 50),
-
-              // 1. 텍스트 위치 살짝 오른쪽으로 조정
               const Padding(
                 padding: EdgeInsets.only(left: 20),
-                child: Text(
-                  '이런 대화들이 있었어요',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                  ),
-                ),
+                child: Text('이런 대화들이 있었어요', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: Colors.black)),
               ),
               const SizedBox(height: 10),
+              Expanded(
+                child: FutureBuilder<Map<String, dynamic>>(
+                  future: _logsFuture,
+                  builder: (context, snapshot) {
+                    if (_logsFuture == null || snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: Color(0xFF4882FD)));
+                    }
 
-              // 2. 카드 자체를 가로 중앙 정렬
-              Center(
-                child: Container(
-                  // 카드의 가로 크기를 명시적으로 지정 (화면 너비의 90%)
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    // 카드가 더 돋보이게 그림자 추가 (선택 사항)
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: items.length,
-                    separatorBuilder: (_, __) => const Divider(
-                      height: 1,
-                      color: Color(0xFFEEEEEE),
-                      indent: 16,
-                      endIndent: 16,
-                    ),
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      return InkWell(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => SummaryScreen(
-                                meetingTitle: item.title,
-                                dateTimeText: item.time,
-                                durationText: item.duration,
-                              ),
-                            ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 25,
-                            vertical: 15,
+                    // 서버에서 온 데이터 추출 (에러나 데이터 없음 시 빈 리스트)
+                    final List<Log> serverLogs = [];
+                    if (snapshot.hasData && snapshot.data?['logs'] != null) {
+                      serverLogs.addAll(snapshot.data?['logs']);
+                    }
+
+                    // 서버 데이터가 비어있으면 가짜 데이터를 사용
+                    final displayLogs = serverLogs.isEmpty ? mockItems : serverLogs;
+
+                    return SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Center(
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.9,
+                          margin: const EdgeInsets.only(bottom: 30),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.title,
-                                style: const TextStyle(
-                                  fontSize: 20, // 텍스트 크기 살짝 조정
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: displayLogs.length,
+                            separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFEEEEEE), indent: 16, endIndent: 16),
+                            itemBuilder: (context, index) {
+                              final item = displayLogs[index];
+                              return InkWell(
+                                onTap: () {
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (_) => SummaryScreen(
+                                      logId: item.logId,
+                                      meetingTitle: item.title,
+                                      dateTimeText: item.time,
+                                      durationText: item.duration,
+                                    ),
+                                  ));
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(item.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Colors.black)),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          Text(item.time, style: const TextStyle(fontSize: 15, color: Color(0xFF868686))),
+                                          const SizedBox(width: 8),
+                                          const Text('-', style: TextStyle(color: Color(0xFF868686))),
+                                          const SizedBox(width: 8),
+                                          Text(item.duration, style: const TextStyle(fontSize: 15, color: Color(0xFF868686))),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Text(
-                                    item.time,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      color: Color(0xFF868686),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    '-',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: Color(0xFF868686),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    item.duration,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      color: Color(0xFF868686),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                              );
+                            },
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
