@@ -18,12 +18,15 @@ void main() async {
   await initializeDateFormatting('ko_KR', null);
 
   KakaoSdk.init(
-    nativeAppKey: 'f90beb4e45400ac7959f9e2929295180', // 🔥 여기 필수
+    nativeAppKey: 'f90beb4e45400ac7959f9e2929295180',
   );
+
+  // 🔴 기존 로그인 체크 로직 (지금은 사용 안 함)
+  /*
   final storage = const FlutterSecureStorage();
   final accessToken = await storage.read(key: 'accessToken');
 
-  String initialRoute = '/main';
+  String initialRoute;
 
   if (accessToken != null) {
     log("이미 로그인 상태");
@@ -34,19 +37,23 @@ void main() async {
   }
 
   runApp(MyApp(initialRoute: initialRoute));
+  */
+
+  // 🟢 로그인 없이 바로 홈으로 이동
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final String initialRoute;
-
-  const MyApp({super.key, required this.initialRoute});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Malbit',
-      initialRoute: initialRoute,
+
+      // 🔥 핵심: 무조건 홈으로 시작
+      initialRoute: '/main',
 
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
