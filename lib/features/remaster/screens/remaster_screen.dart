@@ -68,84 +68,89 @@ class _RemasterScreenState extends State<RemasterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF7F6F6),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 85),
+        // 여기 SingleChildScrollView가 추가되어 이제 아래쪽이 잘리지 않고 스크롤됩니다.
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 75),
 
-              // 제목
-              const Text(
-                'AI 문장 교정',
-                style: TextStyle(
-                  fontSize: 35,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -1,
+                // 제목
+                const Text(
+                  'AI 문장 교정',
+                  style: TextStyle(
+                    fontSize: 35,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -1,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
+                const SizedBox(height: 8),
 
-              // 부제목
-              Text(
-                '더 정확하고 자연스러운 표현으로 바꿔드릴게요.',
-                style: TextStyle(color: Colors.grey[600], fontSize: 15),
-              ),
-              const SizedBox(height: 65),
+                // 부제목
+                Text(
+                  '더 정확하고 자연스러운 표현으로 바꿔드릴게요.',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 15),
+                ),
+                const SizedBox(height: 65),
 
-              // 잘못된 문장 섹션
-              _sectionTitle('이렇게 들려요.', Icons.hearing_rounded, Colors.black),
-              const SizedBox(height: 12),
-              _messageBox(context, _originalText, isHighlighted: false),
-              const SizedBox(height: 35),
+                // 잘못된 문장 섹션
+                _sectionTitle('이렇게 들려요.', Icons.hearing_rounded, Colors.black),
+                const SizedBox(height: 12),
+                _messageBox(context, _originalText, isHighlighted: false),
+                const SizedBox(height: 35),
 
-              // AI 교정 문장 섹션
-              _sectionTitle('이렇게 말해보세요!', Icons.auto_awesome, const Color(0xFF4882FD)),
-              const SizedBox(height: 12),
-              _messageBox(
-                context,
-                _refinedText,
-                isHighlighted: true,
-                showActions: true,
-              ),
+                // AI 교정 문장 섹션
+                _sectionTitle('이렇게 말해보세요!', Icons.auto_awesome, const Color(0xFF4882FD)),
+                const SizedBox(height: 12),
+                _messageBox(
+                  context,
+                  _refinedText,
+                  isHighlighted: true,
+                  showActions: true,
+                ),
 
-              const SizedBox(height: 55),
+                const SizedBox(height: 55),
 
-              // 마이크 버튼 레이아웃
-              Align(
-                alignment: Alignment.center,
-                child: Column(
-                  children: [
-                    GestureDetector(
-                      onTap: _handleMicAction,
-                      child: Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          color: _isRecording ? Colors.redAccent : const Color(0xFF4882FD),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: (_isRecording ? Colors.redAccent : const Color(0xFF4882FD)).withOpacity(0.3),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                            _isRecording ? Icons.stop_rounded : Icons.mic_none_rounded,
-                            color: Colors.white,
-                            size: 45
+                // 마이크 버튼 레이아웃
+                Align(
+                  alignment: Alignment.center,
+                  child: Column(
+                    children: [
+                      GestureDetector(
+                        onTap: _handleMicAction,
+                        child: Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            color: _isRecording ? Colors.redAccent : const Color(0xFF4882FD),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: (_isRecording ? Colors.redAccent : const Color(0xFF4882FD)).withOpacity(0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                              _isRecording ? Icons.stop_rounded : Icons.mic_none_rounded,
+                              color: Colors.white,
+                              size: 45
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 30),
-                  ],
+                      const SizedBox(height: 30),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                // 스크롤 시 하단 여유 공간을 위해 추가 (선택사항)
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),
@@ -162,7 +167,7 @@ class _RemasterScreenState extends State<RemasterScreen> {
           text,
           style: TextStyle(
             color: Colors.black,
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -212,7 +217,7 @@ class _RemasterScreenState extends State<RemasterScreen> {
                 : Text(
               text,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 height: 1.6,
                 fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.w400,
                 color: isHighlighted ? Colors.black : Colors.grey[600],
@@ -285,7 +290,7 @@ class _ActionButtonState extends State<_ActionButton> {
           children: [
             Icon(
               widget.icon,
-              size: 22,
+              size: 20,
               color: activeColor,
             ),
             const SizedBox(width: 4),

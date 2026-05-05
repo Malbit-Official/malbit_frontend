@@ -14,7 +14,7 @@ class BottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
-        height: 70,
+        height: 60,
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border(
@@ -53,8 +53,8 @@ class BottomNavBar extends StatelessWidget {
         children: [
           Image.asset(
             icon,
-            width: 50,
-            height: 50,
+            width: 40,
+            height: 40,
             color: isActive
                 ? const Color(0xFF4882FD)
                 : Colors.black54,
