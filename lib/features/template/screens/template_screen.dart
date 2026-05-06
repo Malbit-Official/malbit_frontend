@@ -15,8 +15,6 @@ class TemplateScreen extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 10),
-
-            /// 🔹 상단 제목
             const Text(
               "직무 상황으로 말해보기",
               style: TextStyle(
@@ -25,24 +23,16 @@ class TemplateScreen extends StatelessWidget {
                 color: Colors.black,
               ),
             ),
-
             const SizedBox(height: 10),
-
             const Text(
               "실제 업무에서 쓰는 말, 미리 연습하고 편하게 말해요.",
-              style: TextStyle(
-                fontSize: 17,
-                color: Colors.black,
-              ),
+              style: TextStyle(fontSize: 17, color: Colors.black),
             ),
-
             const SizedBox(height: 10),
-
-            /// 🔹 카드 리스트
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                children:  [
+                children: [
                   _TemplateCard(
                     title: "주문 받기 ☕️",
                     hashtags: "# 주문 # 추천",
@@ -50,7 +40,9 @@ class TemplateScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) =>  OrderScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const OrderScreen(categoryId: 1),
+                        ),
                       );
                     },
                   ),
@@ -61,7 +53,9 @@ class TemplateScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const ProductScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const ProductScreen(categoryId: 2),
+                        ),
                       );
                     },
                   ),
@@ -72,7 +66,9 @@ class TemplateScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const ReportScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const ReportScreen(categoryId: 3),
+                        ),
                       );
                     },
                   ),
@@ -83,7 +79,9 @@ class TemplateScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const CallScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const CallScreen(categoryId: 4),
+                        ),
                       );
                     },
                   ),
@@ -97,7 +95,6 @@ class TemplateScreen extends StatelessWidget {
   }
 }
 
-/// 🔥 카드 위젯
 class _TemplateCard extends StatelessWidget {
   final String title;
   final String hashtags;
@@ -116,79 +113,71 @@ class _TemplateCard extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-        child: Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// 🔥 이미지 (핵심)
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(16),
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+              child: Image.asset(
+                imagePath,
+                width: double.infinity,
+                height: 140,
+                fit: BoxFit.cover,
+              ),
             ),
-            child: Image.asset(
-              imagePath,
-              width: double.infinity,
-              height: 140, // 👉 여기 키우면 더 커짐
-              fit: BoxFit.cover,
-            ),
-          ),
-
-          /// 🔹 텍스트 영역
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 제목
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-
-                /// 🔥 오른쪽 아래 정렬
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Wrap(
-                    spacing: 6,
-                    children: hashtags
-                        .split("#")
-                        .where((e) => e.trim().isNotEmpty)
-                        .map((e) => _hashtagChip("#${e.trim()}"))
-                        .toList(),
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Wrap(
+                      spacing: 6,
+                      children: hashtags
+                          .split("#")
+                          .where((e) => e.trim().isNotEmpty)
+                          .map((e) => _hashtagChip("#${e.trim()}"))
+                          .toList(),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
-}
-Widget _hashtagChip(String text) {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-    decoration: BoxDecoration(
-      color: const Color(0xFFE6F0FA),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Text(
-      text,
-      style: const TextStyle(
-        fontSize: 15,
-        color: Colors.black87,
+
+  Widget _hashtagChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE6F0FA),
+        borderRadius: BorderRadius.circular(20),
       ),
-    ),
-  );
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 15, color: Colors.black87),
+      ),
+    );
+  }
 }
