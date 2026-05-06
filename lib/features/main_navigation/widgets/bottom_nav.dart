@@ -12,26 +12,28 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 70,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey.shade300,
-            width: 1,
+    return SafeArea(
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey.shade300,
+              width: 1,
+            ),
           ),
         ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navItem("assets/images/AI_icon.png", 0),
-          _navItem("assets/images/Recommand_icon.png", 1),
-          _navItem("assets/images/Home_icon.png", 2),
-          _navItem("assets/images/Learn_icon.png", 3),
-          _navItem("assets/images/Record_icon.png", 4),
-        ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _navItem("assets/images/AI_icon.png", 0),
+            _navItem("assets/images/Recommand_icon.png", 1),
+            _navItem("assets/images/Home_icon.png", 2),
+            _navItem("assets/images/Learn_icon.png", 3),
+            _navItem("assets/images/Record_icon.png", 4),
+          ],
+        ),
       ),
     );
   }
@@ -51,8 +53,8 @@ class BottomNavBar extends StatelessWidget {
         children: [
           Image.asset(
             icon,
-            width: 50,
-            height: 50,
+            width: 40,
+            height: 40,
             color: isActive
                 ? const Color(0xFF4882FD)
                 : Colors.black54,
