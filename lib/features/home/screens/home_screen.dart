@@ -104,6 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       clipBehavior: Clip.antiAlias,
+
                       child: Stack(
                         children: [
                           const Column(
@@ -112,17 +113,19 @@ class _HomeScreenState extends State<HomeScreen> {
                               Text(
                                 "지금 말하면,\n더 자연스럽게 바꿔줘요",
                                 style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    height: 1.3),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.3,
+                                ),
                               ),
                               SizedBox(height: 8),
                               Text(
                                 "부정확한 발화를 정확한 문장으로!",
                                 style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.black54,
-                                    fontWeight: FontWeight.w600),
+                                  fontSize: 18,
+                                  color: Colors.black54,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ],
                           ),

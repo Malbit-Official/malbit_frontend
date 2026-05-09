@@ -50,6 +50,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> uploadProfileImage(File image) async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://10.0.2.2:8080/api/users/profile-image'),
+    );
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.files.add(
+      await http.MultipartFile.fromPath('file', image.path),
+    );
+
+    var response = await request.send();
+
+    print("이미지 업로드: ${response.statusCode}");
+  }
   Future<void> _loadUserInfo() async {
     try {
       final token = await AppStorage.storage.read(key: 'accessToken');
@@ -62,20 +80,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
         },
       );
 
+      print("유저 정보 응답 코드: ${response.statusCode}");
+      print("유저 정보 응답 내용: ${utf8.decode(response.bodyBytes)}");
+
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final user = data['data'];
 
         setState(() {
-          userName = data['data']['name'] ?? "";
-          email = data['data']['email'] ?? "";
-          currentJob = data['data']['jobType'] ?? "";
-          disabilityType = data['data']['disabilityType'] ?? "";
-          cognitiveLevel = data['data']['cognitiveLevel'] ?? "";
-          profileImagePath = data['data']['profileImage'];
-
+          userName = user['name'] ?? "";
+          email = user['email'] ?? "";
+          currentJob = user['jobType'] ?? "";
+          disabilityType = user['disabilityType'] ?? "";
+          cognitiveLevel = user['cognitiveLevel'] ?? "";
+          profileImagePath = user['profileImage'];
         });
       }
-
     } catch (e) {
       print("유저 정보 API 오류: $e");
     }
@@ -111,21 +131,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
         },
       );
 
+      print("통계 요청 URL: http://10.0.2.2:8080/api/users/statistics");
+      print("통계 응답 코드: ${response.statusCode}");
+      print("통계 응답 내용: ${utf8.decode(response.bodyBytes)}");
+
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final stats = data['data'];
 
         setState(() {
-          totalCorrection = data['data']['totalCorrectionCount'];
-          averageIntensity = data['data']['averageCorrectionIntensity'];
-          completedRoleplays = data['data']['completedRoleplays'];
-          generatedSummaries = data['data']['generatedSummaries'];
+          totalCorrection = stats['totalCorrectionCount'] ?? 0;
+          averageIntensity = stats['averageCorrectionIntensity'] ?? 0;
+          completedRoleplays = stats['completedRoleplays'] ?? 0;
+          generatedSummaries = stats['generatedSummaries'] ?? 0;
         });
       }
-
     } catch (e) {
       print("통계 API 오류: $e");
     }
   }
+
   Future<void> _updateJob() async {
     final token = await AppStorage.storage.read(key: 'accessToken');
 
@@ -437,23 +462,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 20),
 
-            /// 사용 통계
+            /// 상황극 연습 통계
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _StatTile(title: "총 보정 횟수", value: "$totalCorrection"),
-                  _StatTile(title: "평균 보정 강도", value: "$averageIntensity%"),
-                  _StatTile(title: "완료한 상황극", value: "$completedRoleplays"),
-                  _StatTile(title: "생성한 요약", value: "$generatedSummaries"),
+                  const Text(
+                    "상황극 연습 통계",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    childAspectRatio: 3,
+                    children: [
+                      _StatTile(title: "상황극 연습", value: "$completedRoleplays회"),
+                      _StatTile(title: "총 보정 횟수", value: "$totalCorrection회"),
+                      _StatTile(title: "평균 보정 강도", value: "$averageIntensity%"),
+                      _StatTile(title: "생성한 요약", value: "$generatedSummaries개"),
+                    ],
+                  ),
                 ],
               ),
             ),
