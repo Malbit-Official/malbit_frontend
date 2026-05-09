@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../../core/services/training_api.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:malbit_frontend/core/services/storage.dart';
 
 class CallScreen extends StatefulWidget {
   final int categoryId;
@@ -173,6 +176,8 @@ class _CallScreenState extends State<CallScreen> {
   Future<void> _finishSession() async {
     print('=== FINISH 호출 ===');
     print('sessionId: $sessionId');
+
+    await increaseRoleplayCount();
 
     if (sessionId == null) {
       print('sessionId null → 로컬 결과로 다이얼로그');
@@ -599,5 +604,18 @@ class _CallScreenState extends State<CallScreen> {
         ),
       ),
     );
+  }
+  Future<void> increaseRoleplayCount() async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    final response = await http.patch(
+      Uri.parse('http://10.0.2.2:8080/api/users/statistics/roleplay'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    print("상황극 증가 응답 코드: ${response.statusCode}");
+    print("상황극 증가 응답 내용: ${utf8.decode(response.bodyBytes)}");
   }
 }
