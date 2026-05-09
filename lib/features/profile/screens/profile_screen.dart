@@ -50,24 +50,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> uploadProfileImage(File image) async {
-    final token = await AppStorage.storage.read(key: 'accessToken');
-
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('http://10.0.2.2:8080/api/users/profile-image'),
-    );
-
-    request.headers['Authorization'] = 'Bearer $token';
-
-    request.files.add(
-      await http.MultipartFile.fromPath('file', image.path),
-    );
-
-    var response = await request.send();
-
-    print("이미지 업로드: ${response.statusCode}");
-  }
   Future<void> _loadUserInfo() async {
     try {
       final token = await AppStorage.storage.read(key: 'accessToken');
