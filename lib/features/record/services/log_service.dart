@@ -4,7 +4,7 @@ import '../models/log.dart';
 import '../models/log_detail.dart';
 
 class LogService {
-  static const String baseUrl = "http://10.0.2.2:8080/api";
+  static const String baseUrl = "http://13.125.107.37:8080/api";
 
   static Map<String, String> _getHeaders(String token) {
     return {

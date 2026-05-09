@@ -92,7 +92,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final token = await AppStorage.storage.read(key: 'accessToken');
 
     final response = await http.patch(
-      Uri.parse('http://10.0.2.2:8080/api/users/settings'),
+      Uri.parse('http://13.125.107.37:8080/api/users/settings'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -117,7 +117,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       final response = await http.patch(
-        Uri.parse('http://10.0.2.2:8080/api/users/email'),
+        Uri.parse('http://13.125.107.37:8080/api/users/email'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -158,7 +158,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://10.0.2.2:8080/api/users/profile-image'),
+      Uri.parse('http://13.125.107.37:8080/api/users/profile-image'),
     );
 
     request.headers['Authorization'] = 'Bearer $token';
@@ -185,7 +185,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       final response = await http.patch(
-        Uri.parse('http://10.0.2.2:8080/api/users/name'),
+        Uri.parse('http://13.125.107.37:8080/api/users/name'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
