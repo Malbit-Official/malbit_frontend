@@ -38,8 +38,18 @@ class _RemasterScreenState extends State<RemasterScreen> {
     } else {
       if (await _audioRecorder.hasPermission()) {
         final dir = await getApplicationDocumentsDirectory();
-        final path = '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-        await _audioRecorder.start(const RecordConfig(), path: path);
+        final path = '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.wav';
+
+        // WAV 16kHz 설정 유지
+        await _audioRecorder.start(
+            const RecordConfig(
+              encoder: AudioEncoder.wav,
+              sampleRate: 16000,
+              bitRate: 128000,
+            ),
+            path: path
+        );
+
         setState(() => _isRecording = true);
       }
     }
@@ -70,7 +80,6 @@ class _RemasterScreenState extends State<RemasterScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F6F6),
       body: SafeArea(
-        // 여기 SingleChildScrollView가 추가되어 이제 아래쪽이 잘리지 않고 스크롤됩니다.
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30),

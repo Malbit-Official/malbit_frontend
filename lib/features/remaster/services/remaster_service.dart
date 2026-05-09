@@ -8,59 +8,60 @@ class RemasterService {
   static Future<Map<String, dynamic>> uploadAudio({
     required String filePath,
     required String token,
-    String tone = "정중하게",
+    String tone = "gentle", // 백엔드 예시값과 일치
   }) async {
-    final url = Uri.parse('$baseUrl/api/logs');
+    final url = Uri.parse('$baseUrl/api/remaster');
     var request = http.MultipartRequest('POST', url);
 
+    // 1. 인증 헤더
     request.headers.addAll({
       'Authorization': 'Bearer $token',
       'Accept': 'application/json'
     });
 
-    request.files.add(http.MultipartFile.fromString(
-      'session_id',
-      '102',
-      contentType: MediaType('application', 'json'),
-    ));
-
+    // 2. 말투 설정 (백엔드 @RequestPart String 대응)
+    // 일반 field가 아닌 application/json 타입을 가진 Part로 보냄 (500 에러 방지)
     request.files.add(http.MultipartFile.fromString(
       'preferred_tone',
       tone,
       contentType: MediaType('application', 'json'),
     ));
 
+    // 3. 오디오 파일 전송 (WAV 형식 명시)
     request.files.add(await http.MultipartFile.fromPath(
       'audio_file',
       filePath,
-      // 오디오 타입 명시 (서버 strict 체크 대비)
-      contentType: MediaType('audio', 'mpeg'),
+      contentType: MediaType('audio', 'wav'),
     ));
 
     try {
-      final streamedResponse = await request.send();
+      // 40초 타임아웃 설정
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 40));
       final response = await http.Response.fromStream(streamedResponse);
 
-      // 디버깅을 위해 로그 출력
       print("서버 응답 코드: ${response.statusCode}");
-      print("서버 응답 내용: ${utf8.decode(response.bodyBytes)}");
+      print("서버 응답 바디: ${utf8.decode(response.bodyBytes)}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
+
+        // 백엔드 ApiResponse<RemasteringLogResponse> 구조 파싱
+        final resultData = data['data'];
+
         return {
           'success': true,
-          'originalSpeech': data['original_speech'],
-          'refinedText': data['refined_text'],
+          'originalSpeech': resultData['original_speech'] ?? "인식 실패",
+          'refinedText': resultData['refined_text'] ?? "교정 실패",
         };
       } else {
         return {
           'success': false,
-          'message': '서버 에러: ${response.statusCode}'
+          'message': '서버 오류: ${response.statusCode}'
         };
       }
     } catch (e) {
-      print("네트워크 에러 상세: $e");
-      return {'success': false, 'message': '서버 연결 실패: $e'};
+      print("전송 에러: $e");
+      return {'success': false, 'message': '연결 실패'};
     }
   }
 }
