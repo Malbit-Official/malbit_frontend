@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/features/main_navigation/screens/main_screen.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../../../core/services/storage.dart';
 import '../../main_navigation/widgets/bottom_nav.dart';
 import '../../record/screens/record_screen.dart';
 import 'calendar_screen.dart';
@@ -34,37 +38,44 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
 
+  // 녹음 및 상태 관리를 위한 변수
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  bool _isRecording = false;
+  String? _recordedFilePath;
+
+  // [추가] 실시간 상태 메시지 확인용 변수
+  String _statusMessage = "";
+
+  @override
+  void dispose() {
+    _audioRecorder.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F6F6),
-      // 1. 상단 AppBar를 없애야 카드가 맨 위로 붙습니다.
       appBar: null,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
-              /// 2. 상단 통합 카드 (가로 꽉 차고 위로 밀착)
               Container(
                 width: double.infinity,
-                // 내부 여백: 좌우 25, 위 20, 아래 30 (시안에 맞춰 조절)
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 35),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-
-                ),
+                decoration: const BoxDecoration(color: Colors.white),
                 child: Column(
                   children: [
-                    // 로고 및 설정 버튼 Row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Image.asset(
-                          "assets/images/logo2.png", // 본인의 로고 파일 경로
-                          height: 30,               // 시안에 맞춰 높이 조절 (텍스트 26 정도면 30~35가 적당함)
+                          "assets/images/logo2.png",
+                          height: 30,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) => const Text(
-                            "말빛", // 이미지가 없을 때 대비한 백업 텍스트
+                            "말빛",
                             style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -77,7 +88,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 15),
-                    // 하늘색 메인 배너
                     Container(
                       height: 170,
                       width: double.infinity,
@@ -93,7 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-
                       clipBehavior: Clip.antiAlias,
 
                       child: Stack(
@@ -138,15 +147,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 10),
-
-              /// 3. 하단 콘텐츠 영역 (여기서부터는 좌우 여백 적용)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 25),
                 child: Column(
                   children: [
-                    /// 캘린더 영역
                     _buildSectionCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,15 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
-
-
-
-
-
-
                     const SizedBox(height: 28),
-
-                    /// 추천 버튼
                     Container(
                       width: double.infinity,
                       height: 90,
@@ -220,31 +217,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xff4882FD),
                           elevation: 0,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                         ),
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => const RoleplayListScreen(),
-                            ),
+                            MaterialPageRoute(builder: (context) => const RoleplayListScreen()),
                           );
                         },
                         child: const Text(
                           "상황별 발화 추천받기\nclick!",
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 28),
-
-                    /// 오늘의 업무 기록 카드
                     _buildSectionCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,40 +243,21 @@ class _HomeScreenState extends State<HomeScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                "참여자 수",
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.black87
-                                )
-                              ),
+                              const Text("참여자 수", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400, color: Colors.black87)),
                               Text(
-                                _participantCount >= 5
-                                    ? "5명 이상"
-                                    : "${_participantCount.toInt()}명",
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w400
-                                ),
+                                _participantCount >= 5 ? "5명 이상" : "${_participantCount.toInt()}명",
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
                               ),
                             ],
                           ),
                           SliderTheme(
                             data: SliderTheme.of(context).copyWith(
-                              // 1. 슬라이더 트랙(선)의 두께 설정
-                              trackHeight: 2.3, // 기본값은 보통 4.0입니다. 숫자를 키울수록 두꺼워집니다.
-
-                              // 2. 동그란 손잡이(Thumb) 설정 (원하는 경우)
+                              trackHeight: 2.3,
                               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12.0),
-
-                              // 3. 클릭 시 퍼지는 효과의 크기
                               overlayShape: const RoundSliderOverlayShape(overlayRadius: 15.0),
-
-                              // 4. 색상 세밀하게 조정
-                              activeTrackColor: const Color(0xffEF5350),   // 채워지는 부분 색상
-                              inactiveTrackColor: const Color(0xffF0F0F0), // 안 채워진 부분 색상
-                              thumbColor: const Color(0xffEF5350),         // 손잡이 색상
+                              activeTrackColor: const Color(0xffEF5350),
+                              inactiveTrackColor: const Color(0xffF0F0F0),
+                              thumbColor: const Color(0xffEF5350),
                             ),
                             child: Slider(
                               value: _participantCount,
@@ -300,16 +269,89 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 10),
                           Center(
-                            child: GestureDetector(
-                              onTap: () {
-                                MainScreen.mainScreenState?.setTabIndex(4);
-                              },
-                              child: Image.asset(
-                                "assets/images/Rec_Button.png", // 여기에 준비하신 녹음 버튼 이미지 경로를 넣으세요
-                                width: 55,  // 기존 radius 30이 지름 60이었으니, 70~80 정도가 적당합니다.
-                                height: 55,
-                                fit: BoxFit.contain,
-                              ),
+                            child: Column(
+                              children: [
+                                GestureDetector(
+                                  onTap: () async {
+                                    if (!_isRecording) {
+                                      if (await _audioRecorder.hasPermission()) {
+                                        final directory = await getApplicationDocumentsDirectory();
+                                        _recordedFilePath = '${directory.path}/meeting_${DateTime.now().millisecondsSinceEpoch}.wav';
+                                        await _audioRecorder.start(
+                                            const RecordConfig(
+                                              encoder: AudioEncoder.wav,
+                                              sampleRate: 16000,
+                                              bitRate: 128000,
+                                            ),
+                                            path: _recordedFilePath!);
+                                        setState(() {
+                                          _isRecording = true;
+                                          _statusMessage = "녹음 중...";
+                                        });
+                                        print("WAV 녹음 시작: $_recordedFilePath");
+                                      }
+                                    } else {
+                                      final path = await _audioRecorder.stop();
+                                      setState(() {
+                                        _isRecording = false;
+                                        _statusMessage = "서버 연결 준비 중...";
+                                      });
+
+                                      if (path != null) {
+                                        MainScreen.mainScreenState?.setTabIndex(4);
+
+                                        try {
+                                          final token = await AppStorage.storage.read(key: 'accessToken') ?? "";
+                                          var request = http.MultipartRequest(
+                                              'POST',
+                                              Uri.parse('http://13.125.107.37:8080/api/remaster/analyze-meeting'));
+
+                                          request.headers['Authorization'] = 'Bearer $token';
+                                          request.fields['participantCount'] = _participantCount.toInt().toString();
+                                          request.files.add(await http.MultipartFile.fromPath('file', path));
+
+                                          setState(() => _statusMessage = "파일 업로드 중...");
+
+                                          // [수정] 응답 시간을 5분으로 연장하여 타임아웃 방지
+                                          var client = http.Client();
+                                          var streamedResponse = await client.send(request).timeout(const Duration(minutes: 5));
+                                          var response = await http.Response.fromStream(streamedResponse);
+
+                                          if (response.statusCode == 200) {
+                                            setState(() => _statusMessage = "분석 완료!");
+                                            print("서버 분석 완료");
+                                          } else {
+                                            setState(() => _statusMessage = "에러: ${response.statusCode}");
+                                            print("서버 응답 에러: ${response.statusCode}");
+                                          }
+                                        } catch (e) {
+                                          setState(() => _statusMessage = "전송 실패: 연결 확인 필요");
+                                          print("서버 전송 에러: $e");
+                                        }
+                                      }
+                                    }
+                                  },
+                                  child: Image.asset(
+                                    "assets/images/Rec_Button.png",
+                                    width: 55,
+                                    height: 55,
+                                    fit: BoxFit.contain,
+                                    color: _isRecording ? Colors.red.withOpacity(0.5) : null,
+                                    colorBlendMode: _isRecording ? BlendMode.modulate : null,
+                                  ),
+                                ),
+                                // [추가] 실시간 상태 메시지 UI (디자인 해치지 않는 작은 텍스트)
+                                const SizedBox(height: 8),
+                                Text(
+                                  _statusMessage,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: _statusMessage.contains("에러") || _statusMessage.contains("실패")
+                                        ? Colors.red : Colors.blueAccent,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
                           )
                         ],
@@ -325,7 +367,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 반복되는 흰색 카드 스타일을 위한 공통 위젯
   Widget _buildSectionCard({required Widget child}) {
     return Container(
       width: double.infinity,
@@ -342,19 +383,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       child: child,
-    );
-  }
-
-  // 날짜 아이템 위젯
-  Widget day(String text, bool highlight) {
-    return CircleAvatar(
-      radius: 18,
-      backgroundColor: highlight ? const Color(0xff4882FD) : const Color(0xffF0F0F0),
-      child: Text(text,
-          style: TextStyle(
-              color: highlight ? Colors.white : Colors.black,
-              fontWeight: highlight ? FontWeight.bold : FontWeight.normal
-          )),
     );
   }
 }

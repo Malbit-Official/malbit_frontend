@@ -122,7 +122,7 @@ class LogService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/logs'),
+        Uri.parse('$baseUrl/logs/summary'),
         headers: _getHeaders(token),
         body: jsonEncode({
           'title': title,
