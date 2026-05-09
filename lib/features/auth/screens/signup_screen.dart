@@ -318,6 +318,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       SizedBox(
                         height: 43,
                         child: DropdownButtonFormField<String>(
+                          dropdownColor: const Color(0xFFF7F6F6),
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w400,
@@ -344,6 +345,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       SizedBox(
                         height: 43,
                         child: DropdownButtonFormField<String>(
+                          dropdownColor: const Color(0xFFF7F6F6),
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w400,
@@ -373,6 +375,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       SizedBox(
                         height: 43,
                         child: DropdownButtonFormField<int>(
+                          dropdownColor: const Color(0xFFF7F6F6),
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w400,

@@ -178,11 +178,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       fit: BoxFit.contain,
                     ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 5),
 
                   // ✅ 이메일 필드
                   SizedBox(
-                    height: 43, // 리셋 화면 높이와 통일
+                    height: 43,
                     child: TextField(
                       controller: _emailController,
                       decoration: _getInputDecoration("이메일"),
@@ -251,7 +251,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       foregroundColor: Colors.black,
                       textStyle: const TextStyle(fontSize: 14),
                     ),
-                    child: const Text('임시 비밀번호 발급받기 >'),
+                    child: const Text('새 비밀번호 만들기 >'),
                   ),
 
                   const SizedBox(height: 30),
