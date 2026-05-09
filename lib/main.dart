@@ -20,6 +20,7 @@ void main() async {
     nativeAppKey: 'f90beb4e45400ac7959f9e2929295180',
   );
 
+  /*
   // ✅ 로그인 상태 확인 로직 복구
   final storage = const FlutterSecureStorage();
   final accessToken = await storage.read(key: 'accessToken');
@@ -32,9 +33,9 @@ void main() async {
   } else {
     log("로그인 필요");
     initialRoute = '/login';
-  }
+  }*/
 
-  runApp(MyApp(initialRoute: initialRoute));
+  runApp(MyApp(initialRoute: '/home'));
 }
 
 class MyApp extends StatelessWidget {
