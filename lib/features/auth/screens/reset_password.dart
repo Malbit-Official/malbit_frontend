@@ -64,7 +64,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   // 이메일 인증코드 발송
   Future<void> _sendCode() async {
     setState(() => _isSendingEmail = true);
-    // AuthService에 구현된 메소드 호출 (회원가입과 동일한 API 사용 가정)
     final result = await AuthService.sendEmailCode(_emailController.text.trim());
     if (mounted) {
       setState(() => _isSendingEmail = false);
@@ -144,7 +143,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   Navigator.pop(context);
                 },
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 25),
 
               const Center(
                 child: Text(
@@ -152,7 +151,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(height: 80),
+              const SizedBox(height: 70),
 
               // 이메일 입력
               Center(

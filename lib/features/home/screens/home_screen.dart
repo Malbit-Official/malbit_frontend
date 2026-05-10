@@ -38,12 +38,11 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
 
-  // 녹음 및 상태 관리를 위한 변수
+  // 녹음 및 상태 관리 변수
   final AudioRecorder _audioRecorder = AudioRecorder();
   bool _isRecording = false;
   String? _recordedFilePath;
 
-  // [추가] 실시간 상태 메시지 확인용 변수
   String _statusMessage = "";
 
   @override
@@ -63,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 35),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
                 decoration: const BoxDecoration(color: Colors.white),
                 child: Column(
                   children: [
@@ -72,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Image.asset(
                           "assets/images/logo2.png",
-                          height: 30,
+                          height: 25,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) => const Text(
                             "말빛",
@@ -82,14 +81,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         IconButton(
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          icon: const Icon(Icons.settings, color: Colors.black, size: 40),
+                          icon: const Icon(Icons.settings, color: Colors.black, size: 32),
                           onPressed: () => Navigator.pushNamed(context, '/profile'),
                         ),
                       ],
                     ),
                     const SizedBox(height: 15),
+
                     Container(
-                      height: 170,
+                      height: 150,
                       width: double.infinity,
                       padding: const EdgeInsets.fromLTRB(20, 20, 4, 0),
                       decoration: BoxDecoration(
@@ -113,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Text(
                                 "지금 말하면,\n더 자연스럽게 바꿔줘요",
                                 style: TextStyle(
-                                  fontSize: 22,
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   height: 1.3,
                                 ),
@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Text(
                                 "부정확한 발화를 정확한 문장으로!",
                                 style: TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   color: Colors.black54,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -147,7 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 3),
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 25),
                 child: Column(
@@ -160,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text("잊지 말고 챙겨야 해요",
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                               GestureDetector(
                                 onTap: () => Navigator.push(
                                   context,
@@ -186,6 +187,26 @@ class _HomeScreenState extends State<HomeScreen> {
                               });
                             },
                             daysOfWeekHeight: 20,
+                            calendarBuilders: CalendarBuilders(
+                              dowBuilder: (context, day) {
+                                if (day.weekday == DateTime.saturday) {
+                                  return const Center(
+                                    child: Text(
+                                      '토',
+                                      style: TextStyle(color: Colors.blue, fontSize: 12),
+                                    ),
+                                  );
+                                } else if (day.weekday == DateTime.sunday) {
+                                  return const Center(
+                                    child: Text(
+                                      '일',
+                                      style: TextStyle(color: Colors.redAccent, fontSize: 12),
+                                    ),
+                                  );
+                                }
+                                return null;
+                              },
+                            ),
                             calendarStyle: const CalendarStyle(
                               isTodayHighlighted: true,
                               todayDecoration: BoxDecoration(color: Color(0x804882FD), shape: BoxShape.circle),
@@ -193,16 +214,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             daysOfWeekStyle: const DaysOfWeekStyle(
                               weekdayStyle: TextStyle(fontSize: 12, color: Colors.grey),
-                              weekendStyle: TextStyle(fontSize: 12, color: Colors.redAccent),
                             ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 28),
+
                     Container(
                       width: double.infinity,
-                      height: 90,
+                      height: 80,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
@@ -228,11 +249,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: const Text(
                           "상황별 발화 추천받기\nclick!",
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w500, color: Colors.white),
                         ),
                       ),
                     ),
                     const SizedBox(height: 28),
+
                     _buildSectionCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,6 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           const SizedBox(height: 10),
+
                           Center(
                             child: Column(
                               children: [
