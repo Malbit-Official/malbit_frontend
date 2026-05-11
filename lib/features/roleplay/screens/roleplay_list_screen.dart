@@ -37,7 +37,7 @@ class _RoleplayListScreenState extends State<RoleplayListScreen> {
       final token = await AppStorage.storage.read(key: 'accessToken');
 
       final response = await http.post(
-        Uri.parse('http://13.125.107.37:8080/api/roleplay/recommend'),
+        Uri.parse('http://3.37.239.105:8080/api/roleplay/recommend'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

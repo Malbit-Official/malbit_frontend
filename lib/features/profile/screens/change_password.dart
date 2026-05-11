@@ -51,7 +51,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       final token = await AppStorage.storage.read(key: 'accessToken');
 
       final response = await http.patch(
-        Uri.parse('http://13.125.107.37:8080/api/users/password'),
+        Uri.parse('http://3.37.239.105:8080/api/users/password'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

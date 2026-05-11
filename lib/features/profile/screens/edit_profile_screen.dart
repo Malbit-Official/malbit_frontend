@@ -81,7 +81,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _updateProfile() async {
     final token = await AppStorage.storage.read(key: 'accessToken');
     final response = await http.patch(
-      Uri.parse('http://13.125.107.37:8080/api/users/settings'),
+      Uri.parse('http://3.37.239.105:8080/api/users/settings'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -114,7 +114,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final token = await AppStorage.storage.read(key: 'accessToken');
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://13.125.107.37:8080/api/users/profile-image'),
+      Uri.parse('http://3.37.239.105:8080/api/users/profile-image'),
     );
     request.headers['Authorization'] = 'Bearer $token';
     request.files.add(await http.MultipartFile.fromPath('file', image.path));
@@ -126,7 +126,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (response.statusCode == 200) {
       String imageUrl = data['data']['imageUrl'];
       // 임시 URL 치환
-      imageUrl = imageUrl.replaceAll('http://10.0.2.2:8080', 'http://13.125.107.37:8080');
+      imageUrl = imageUrl.replaceAll('http://10.0.2.2:8080', 'http://3.37.239.105:8080');
       return imageUrl;
     }
     return null;
@@ -136,7 +136,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final token = await AppStorage.storage.read(key: 'accessToken');
     try {
       final response = await http.patch(
-        Uri.parse('http://13.125.107.37:8080/api/users/name'),
+        Uri.parse('http://3.37.239.105:8080/api/users/name'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

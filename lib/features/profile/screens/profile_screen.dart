@@ -55,7 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final token = await AppStorage.storage.read(key: 'accessToken');
 
       final response = await http.get(
-        Uri.parse('http://13.125.107.37:8080/api/users/me'),
+        Uri.parse('http://3.37.239.105:8080/api/users/me'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -87,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://13.125.107.37:8080/api/users/profile-image'),
+      Uri.parse('http://3.37.239.105:8080/api/users/profile-image'),
     );
 
     request.headers['Authorization'] = 'Bearer $token';
@@ -106,7 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final token = await AppStorage.storage.read(key: 'accessToken');
 
       final response = await http.get(
-        Uri.parse('http://13.125.107.37:8080/api/users/statistics'),
+        Uri.parse('http://3.37.239.105:8080/api/users/statistics'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -137,7 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final token = await AppStorage.storage.read(key: 'accessToken');
 
     final response = await http.patch(
-      Uri.parse('http://13.125.107.37:8080/api/users/settings'),
+      Uri.parse('http://3.37.239.105:8080/api/users/settings'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -152,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _deleteVoice() async {
     final token = await AppStorage.storage.read(key: 'accessToken');
     final response = await http.delete(
-      Uri.parse('http://13.125.107.37:8080/api/users/voice'),
+      Uri.parse('http://3.37.239.105:8080/api/users/voice'),
       headers: {'Authorization': 'Bearer $token'},
     );
     print('음성 삭제 응답: ${response.statusCode}');
@@ -163,7 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://13.125.107.37:8080/api/users/logout'),
+        Uri.parse('http://3.37.239.105:8080/api/users/logout'),
         headers: {
           'Authorization': 'Bearer $token',
         },

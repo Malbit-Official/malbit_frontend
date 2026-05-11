@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class CalendarService {
-  static const String baseUrl = "http://13.125.107.37:8080";
+  static const String baseUrl = "http://3.37.239.105:8080";
 
   static Map<String, String> _getHeaders(String token) => {
     'Authorization': 'Bearer $token',

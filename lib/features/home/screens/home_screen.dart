@@ -327,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           final token = await AppStorage.storage.read(key: 'accessToken') ?? "";
                                           var request = http.MultipartRequest(
                                               'POST',
-                                              Uri.parse('http://13.125.107.37:8080/api/remaster/analyze-meeting'));
+                                              Uri.parse('http://3.37.239.105:8080/api/remaster/analyze-meeting'));
 
                                           request.headers['Authorization'] = 'Bearer $token';
                                           request.fields['participantCount'] = _participantCount.toInt().toString();

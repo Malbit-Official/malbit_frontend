@@ -33,7 +33,7 @@ class _EmailChangeScreenState extends State<EmailChangeScreen> {
   /// 인증번호 발송
   Future<void> sendCode() async {
     final response = await http.post(
-      Uri.parse('http://13.125.107.37:8080/api/auth/email/send'),
+      Uri.parse('http://3.37.239.105:8080/api/auth/email/send'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         "email": emailController.text,
@@ -55,7 +55,7 @@ class _EmailChangeScreenState extends State<EmailChangeScreen> {
   /// 인증 확인
   Future<void> verifyCode() async {
     final response = await http.post(
-      Uri.parse('http://13.125.107.37:8080/api/auth/email/verify'),
+      Uri.parse('http://3.37.239.105:8080/api/auth/email/verify'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         "email": emailController.text,
@@ -88,7 +88,7 @@ class _EmailChangeScreenState extends State<EmailChangeScreen> {
     final token = await AppStorage.storage.read(key: 'accessToken');
 
     final response = await http.patch(
-      Uri.parse('http://13.125.107.37:8080/api/users/email'),
+      Uri.parse('http://3.37.239.105:8080/api/users/email'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',

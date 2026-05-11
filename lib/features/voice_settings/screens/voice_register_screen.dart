@@ -88,7 +88,7 @@ class _VoiceRegisterScreenState extends State<VoiceRegisterScreen> {
 
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://13.125.107.37:8080/api/users/voice/re-register'),
+        Uri.parse('http://3.37.239.105:8080/api/users/voice/re-register'),
       );
       request.headers['Authorization'] = 'Bearer $token';
 
