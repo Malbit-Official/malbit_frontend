@@ -188,8 +188,10 @@ class _ProductScreenState extends State<ProductScreen> {
       await _speech.listen(
         localeId: 'ko_KR',
         onResult: (result) {
-          if (mounted) setState(() => recognizedText = result.recognizedWords);
-        },
+          if (mounted) {
+            setState(() => recognizedText = result.recognizedWords);
+            print('인식됨: ${result.recognizedWords}');
+          }         },
         listenFor: const Duration(seconds: 60),
         pauseFor: const Duration(seconds: 5),
         cancelOnError: false,
@@ -654,7 +656,7 @@ class _ProductScreenState extends State<ProductScreen> {
     final token = await AppStorage.storage.read(key: 'accessToken');
 
     final response = await http.patch(
-      Uri.parse('http://10.0.2.2:8080/api/users/statistics/roleplay'),
+      Uri.parse('http://13.125.107.37:8080/api/users/statistics/roleplay'),
       headers: {
         'Authorization': 'Bearer $token',
       },

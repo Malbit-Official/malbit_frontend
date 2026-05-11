@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:malbit_frontend/core/services/storage.dart';
 
 const String baseUrl = 'http://13.125.107.37:8080';
 
 class TrainingApi {
   static Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('access_token');
+    return await AppStorage.storage.read(key: 'accessToken');
   }
 
   static Future<int> startSession(int categoryId) async {
