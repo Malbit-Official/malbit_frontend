@@ -149,6 +149,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     print("직무 변경 응답: ${response.body}");
   }
+  Future<void> _deleteVoice() async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+    final response = await http.delete(
+      Uri.parse('http://13.125.107.37:8080/api/users/voice'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    print('음성 삭제 응답: ${response.statusCode}');
+  }
+
   Future<void> _logout() async {
     final token = await AppStorage.storage.read(key: 'accessToken');
 
@@ -187,29 +196,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: const Text("음성 삭제"),
           content: const Text("등록된 음성을 정말 삭제하시겠습니까?"),
           actions: [
-
             OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.grey),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               child: const Text("취소"),
             ),
-
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[100],
-              ),
-              onPressed: () {
-
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red[100]),
+              onPressed: () async {
                 Navigator.pop(context);
-
+                await _deleteVoice(); // ← 여기서 호출
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("음성이 삭제되었습니다."),
-                  ),
+                  const SnackBar(content: Text("음성이 삭제되었습니다.")),
                 );
               },
               child: const Text("삭제"),
@@ -219,6 +216,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
+
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -346,6 +344,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           cognitiveLevel = result["cognitiveLevel"];
                           profileImagePath = result["image"];
                         });
+                        await _loadUserInfo();
 
                         // ✅ 다시 저장 (중요)
                         await AppStorage.storage.write(key: 'name', value: userName);
