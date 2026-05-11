@@ -32,9 +32,6 @@ dependencies:
   google_sign_in: ^6.2.1
   speech_to_text: ^7.0.0
 
-
-
-
   flutter:
     sdk: flutter
   flutter_localizations:
