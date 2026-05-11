@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/core/services/storage.dart';
 
-const String baseUrl = 'http://13.125.107.37:8080';
+const String baseUrl = 'http://3.37.239.105:8080';
 
 class TrainingApi {
   static Future<String?> _getToken() async {

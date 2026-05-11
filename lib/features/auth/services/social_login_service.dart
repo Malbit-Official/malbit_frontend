@@ -12,7 +12,7 @@ class SocialLoginService {
   final _storage = AppStorage.storage;
 
   // ✅ API 통일
-  static const String baseUrl = 'http://13.125.107.37:8080/api/users';
+  static const String baseUrl = 'http://3.37.239.105:8080/api/users';
 
   // ✅ 구글 로그인 설정
   final GoogleSignIn _googleSignIn = GoogleSignIn(

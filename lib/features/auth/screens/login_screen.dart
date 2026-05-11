@@ -56,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    const apiUrl = 'http://13.125.107.37:8080/api/users/login';
+    const apiUrl = 'http://3.37.239.105:8080/api/users/login';
 
     final loginData = {
       'email': _emailController.text,

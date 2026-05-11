@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 class RemasterService {
-  static const String baseUrl = "http://13.125.107.37:8080";
+  static const String baseUrl = "http://3.37.239.105:8080";
 
   static Future<Map<String, dynamic>> uploadAudio({
     required String filePath,
