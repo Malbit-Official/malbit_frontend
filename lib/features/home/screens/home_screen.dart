@@ -22,7 +22,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final AudioRecorder _audioRecorder = AudioRecorder();
   bool _isRecording = false;
   String? _recordedFilePath;
-  String _statusMessage = "";
 
   @override
   void dispose() {
@@ -37,7 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // [고정 영역] 상단 로고 및 배너 (기존 디자인 유지)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 5, 20, 25),
@@ -49,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Column(
                 children: [
+                  // 상단 바: 로고, 설정 버튼
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -70,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 5),
+                  // 메인 배너
                   Container(
                     height: 150,
                     width: double.infinity,
@@ -119,13 +119,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // [하단 영역] 스크롤 제거 후 Expanded로 배치
+            // 하단 콘텐츠 영역
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
                 child: Column(
                   children: [
-                    // 캘린더 카드
+                    // 주간 캘린더
                     _buildSectionCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,11 +190,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // 추천 버튼
+                    // 상황별 발화 추천 이동 버튼
                     _buildMainActionButton(),
                     const SizedBox(height: 20),
 
-                    // 녹음 섹션
+                    // 업무 기록 및 녹음
                     _buildSectionCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,8 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- 기존 위젯 및 로직 (변경 없음) ---
-
+  // 공통 카드 UI 위젯
   Widget _buildSectionCard({required Widget child}) {
     return Container(
       width: double.infinity,
@@ -236,6 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // 파란 버튼 위젯
   Widget _buildMainActionButton() {
     return Container(
       width: double.infinity,
@@ -262,6 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // 참여자 수 표시
   Widget _buildParticipantCountRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -275,6 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // 참여자 수 조절 슬라이더
   Widget _buildParticipantSlider() {
     return SliderTheme(
       data: SliderTheme.of(context).copyWith(
@@ -295,6 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // 녹음 시작/중지 이미지 버튼
   Widget _buildRecordingButton() {
     return Center(
       child: GestureDetector(
@@ -311,6 +314,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // 녹음 및 서버 전송 핸들러
   Future<void> _handleRecording() async {
     if (!_isRecording) {
       if (await _audioRecorder.hasPermission()) {
