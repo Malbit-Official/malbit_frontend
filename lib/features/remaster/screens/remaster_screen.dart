@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../../core/services/storage.dart';
 import '../services/remaster_service.dart';
@@ -15,21 +16,42 @@ class RemasterScreen extends StatefulWidget {
 
 class _RemasterScreenState extends State<RemasterScreen> {
   final AudioRecorder _audioRecorder = AudioRecorder();
+  final FlutterTts _tts = FlutterTts();
   final _storage = AppStorage.storage;
 
-  // 상태 관리 변수
   bool _isRecording = false;
   bool _isLoading = false;
   String _originalText = "마이크를 눌러 말을 시작해보세요.";
   String _refinedText = "...";
 
   @override
+  void initState() {
+    super.initState();
+    _initTts();
+  }
+
+  // TTS 엔진 초기 설정
+  Future<void> _initTts() async {
+    await _tts.setLanguage("ko-KR");
+    await _tts.setSpeechRate(0.5);
+    await _tts.setVolume(1.0);
+  }
+
+  @override
   void dispose() {
     _audioRecorder.dispose();
+    _tts.stop();
     super.dispose();
   }
 
-  // 로직: 마이크 버튼 클릭 핸들러
+  // 보정된 텍스트 음성 출력 핸들러
+  Future<void> _handlePlayAction() async {
+    if (_refinedText != "..." && _refinedText.isNotEmpty) {
+      await _tts.speak(_refinedText);
+    }
+  }
+
+  // 녹음 시작 및 중단 제어: 권한 확인 후 로컬 파일 경로에 WAV 포맷으로 저장
   Future<void> _handleMicAction() async {
     if (_isRecording) {
       final path = await _audioRecorder.stop();
@@ -40,7 +62,6 @@ class _RemasterScreenState extends State<RemasterScreen> {
         final dir = await getApplicationDocumentsDirectory();
         final path = '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-        // WAV 16kHz 설정 유지
         await _audioRecorder.start(
             const RecordConfig(
               encoder: AudioEncoder.wav,
@@ -55,22 +76,22 @@ class _RemasterScreenState extends State<RemasterScreen> {
     }
   }
 
-  // 로직: 서버 전송
+  // 녹음된 파일 서버 전송 후 결과 받아 화면 UI 갱신
   Future<void> _sendAudio(String path) async {
     setState(() => _isLoading = true);
 
     final token = await _storage.read(key: 'accessToken') ?? "";
     final result = await RemasterService.uploadAudio(filePath: path, token: token);
 
-    print("보내는 토큰 확인: [$token]");
-
-    if (result['success']) {
+    if (result['success'] == true) {
       setState(() {
-        _originalText = result['originalSpeech'];
-        _refinedText = result['refinedText'];
+        _originalText = result['original_speech'];
+        _refinedText = result['refined_text'];
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? "오류가 발생했습니다."))
+      );
     }
     setState(() => _isLoading = false);
   }
@@ -80,87 +101,94 @@ class _RemasterScreenState extends State<RemasterScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F6F6),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 75),
-
-                // 제목
-                const Text(
-                  'AI 문장 교정',
-                  style: TextStyle(
-                    fontSize: 35,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -1,
+        child: Column(
+          children: [
+            // 고정 영역: 상단 제목 및 가이드
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: Column(
+                children: [
+                  const SizedBox(height: 55),
+                  const Text(
+                    'AI 문장 교정',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -1,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
+                  const SizedBox(height: 8),
+                  Text(
+                    '더 정확하고 자연스러운 표현으로 바꿔드릴게요.',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 15),
+                  ),
+                  const SizedBox(height: 30),
+                ],
+              ),
+            ),
 
-                // 부제목
-                Text(
-                  '더 정확하고 자연스러운 표현으로 바꿔드릴게요.',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 15),
-                ),
-                const SizedBox(height: 65),
-
-                // 잘못된 문장 섹션
-                _sectionTitle('이렇게 들려요.', Icons.hearing_rounded, Colors.black),
-                const SizedBox(height: 12),
-                _messageBox(context, _originalText, isHighlighted: false),
-                const SizedBox(height: 35),
-
-                // AI 교정 문장 섹션
-                _sectionTitle('이렇게 말해보세요!', Icons.auto_awesome, const Color(0xFF4882FD)),
-                const SizedBox(height: 12),
-                _messageBox(
-                  context,
-                  _refinedText,
-                  isHighlighted: true,
-                  showActions: true,
-                ),
-
-                const SizedBox(height: 55),
-
-                // 마이크 버튼 레이아웃
-                Align(
-                  alignment: Alignment.center,
+            // 스크롤 영역: 본문 결과 박스 및 인터랙션 버튼
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
                   child: Column(
                     children: [
-                      GestureDetector(
-                        onTap: _handleMicAction,
-                        child: Container(
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            color: _isRecording ? Colors.redAccent : const Color(0xFF4882FD),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: (_isRecording ? Colors.redAccent : const Color(0xFF4882FD)).withOpacity(0.3),
-                                blurRadius: 15,
-                                offset: const Offset(0, 8),
+                      const SizedBox(height: 10),
+                      // 잘못된 문장 섹션
+                      _sectionTitle('이렇게 들려요.', Icons.hearing_rounded, Colors.black),
+                      const SizedBox(height: 12),
+                      _messageBox(context, _originalText, isHighlighted: false),
+
+                      const SizedBox(height: 35),
+
+                      _sectionTitle('이렇게 말해보세요!', Icons.auto_awesome, const Color(0xFF4882FD)),
+                      const SizedBox(height: 12),
+                      _messageBox(
+                        context,
+                        _refinedText,
+                        isHighlighted: true,
+                        showActions: true,
+                      ),
+
+                      const SizedBox(height: 40),
+
+                      // 실시간 녹음 시작/중지 마이크 버튼
+                      Align(
+                        alignment: Alignment.center,
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: _handleMicAction,
+                              child: Container(
+                                width: 70, height: 70,
+                                decoration: BoxDecoration(
+                                  color: _isRecording ? Colors.redAccent : const Color(0xFF4882FD),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: (_isRecording ? Colors.redAccent : const Color(0xFF4882FD)).withOpacity(0.3),
+                                      blurRadius: 15, offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                    _isRecording ? Icons.stop_rounded : Icons.mic_none_rounded,
+                                    color: Colors.white, size: 45
+                                ),
                               ),
-                            ],
-                          ),
-                          child: Icon(
-                              _isRecording ? Icons.stop_rounded : Icons.mic_none_rounded,
-                              color: Colors.white,
-                              size: 45
-                          ),
+                            ),
+                            const SizedBox(height: 35),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 30),
                     ],
                   ),
                 ),
-                // 스크롤 시 하단 여유 공간을 위해 추가 (선택사항)
-                const SizedBox(height: 20),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -235,16 +263,15 @@ class _RemasterScreenState extends State<RemasterScreen> {
             ),
           ),
 
-          // 하단 액션 버튼 (showActions가 true일 때만 표시)
+          // 하단 액션 버튼
           if (showActions) ...[
-            const Divider(height: 1, thickness: 0.5, indent: 20, endIndent: 20), // 구분선
+            const Divider(height: 1, thickness: 0.5, indent: 20, endIndent: 20),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 15),
+              padding: const EdgeInsets.symmetric(vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _ActionButton(Icons.volume_up_rounded, '재생'),
-                  _ActionButton(Icons.bookmark_outline_rounded, '저장'),
+                  _ActionButton(Icons.volume_up_rounded, '재생', onTap: _handlePlayAction),
                   _ActionButton(
                     Icons.zoom_out_map,
                     '확대',
@@ -267,7 +294,7 @@ class _RemasterScreenState extends State<RemasterScreen> {
   }
 }
 
-// AI 하단 아이콘 버튼 컴포넌트
+// 하단 아이콘 버튼 컴포넌트
 class _ActionButton extends StatefulWidget {
   final IconData icon;
   final String label;

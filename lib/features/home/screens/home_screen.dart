@@ -320,8 +320,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                         _statusMessage = "서버 연결 준비 중...";
                                       });
 
+                                      // ... 생략 (녹음 중지 로직 내부)
                                       if (path != null) {
-                                        MainScreen.mainScreenState?.setTabIndex(4);
+                                        //MainScreen.mainScreenState?.setTabIndex(4); // 분석 페이지로 이동
 
                                         try {
                                           final token = await AppStorage.storage.read(key: 'accessToken') ?? "";
@@ -329,27 +330,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                               'POST',
                                               Uri.parse('http://3.37.239.105:8080/api/remaster/analyze-meeting'));
 
-                                          request.headers['Authorization'] = 'Bearer $token';
-                                          request.fields['participantCount'] = _participantCount.toInt().toString();
-                                          request.files.add(await http.MultipartFile.fromPath('file', path));
+                                          // 1. 헤더 설정
+                                          request.headers.addAll({
+                                            'Authorization': 'Bearer $token',
+                                            'Accept': 'application/json', // 서버에 JSON 응답을 기대한다고 명시
+                                          });
+
+                                          // 2. 필드 및 파일 설정 (키값 audio_file 확인!)
+                                          // request.fields['participantCount'] = _participantCount.toInt().toString();
+                                          request.files.add(await http.MultipartFile.fromPath('audio_file', path));
 
                                           setState(() => _statusMessage = "파일 업로드 중...");
 
-                                          // [수정] 응답 시간을 5분으로 연장하여 타임아웃 방지
-                                          var client = http.Client();
-                                          var streamedResponse = await client.send(request).timeout(const Duration(minutes: 5));
+                                          // 3. 전송 및 타임아웃 처리
+                                          var streamedResponse = await request.send().timeout(const Duration(minutes: 5));
                                           var response = await http.Response.fromStream(streamedResponse);
 
                                           if (response.statusCode == 200) {
                                             setState(() => _statusMessage = "분석 완료!");
-                                            print("서버 분석 완료");
+                                            print("서버 분석 완료: ${response.body}");
                                           } else {
-                                            setState(() => _statusMessage = "에러: ${response.statusCode}");
-                                            print("서버 응답 에러: ${response.statusCode}");
+                                            // 에러 시 서버에서 보내주는 메시지가 있다면 출력 (디버깅 용도)
+                                            setState(() => _statusMessage = "에러 발생 (${response.statusCode})");
+                                            print("서버 응답 에러 코드: ${response.statusCode}");
+                                            print("서버 에러 내용: ${response.body}");
                                           }
                                         } catch (e) {
-                                          setState(() => _statusMessage = "전송 실패: 연결 확인 필요");
-                                          print("서버 전송 에러: $e");
+                                          setState(() => _statusMessage = "연결 실패");
+                                          print("네트워크 전송 에러: $e");
                                         }
                                       }
                                     }
