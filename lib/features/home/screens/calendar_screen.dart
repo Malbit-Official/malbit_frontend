@@ -330,8 +330,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
         selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
         eventLoader: _getEventsForDay,
         onPageChanged: (focusedDay) {
+          final now = DateTime.now();
           setState(() {
             _focusedDay = focusedDay;
+
+            if (focusedDay.year == now.year && focusedDay.month == now.month) {
+              _selectedDay = now;
+            } else {
+              _selectedDay = DateTime(focusedDay.year, focusedDay.month, 1);
+            }
           });
           _loadAllCalendarData(isSilent: true);
         },
