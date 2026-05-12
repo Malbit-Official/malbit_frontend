@@ -155,7 +155,7 @@ class CalendarService {
     required String token,
     required int taskId,
   }) async {
-    final url = Uri.parse('$baseUrl/api/calendar/$taskId/toggle');
+    final url = Uri.parse('$baseUrl/api/calendar/$taskId/completion');
 
     try {
       final response = await http.patch(url, headers: _getHeaders(token));
