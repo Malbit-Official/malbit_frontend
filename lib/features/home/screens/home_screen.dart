@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Image.asset(
-                        "assets/images/logo2.png",
+                        "assets/images/main_logo.png",
                         height: 25,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) => const Text(
