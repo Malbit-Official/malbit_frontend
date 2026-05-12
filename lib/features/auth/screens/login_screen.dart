@@ -164,7 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 100),
             child: SizedBox(
               width: 322,
               child: Column(
@@ -172,13 +172,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Center(
                     child: Image.asset(
-                      'assets/images/logo.png',
-                      width: 280,
-                      height: 280,
+                      'assets/images/main_logo.png',
+                      width: 170,
+                      height: 170,
                       fit: BoxFit.contain,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 40),
 
                   // ✅ 이메일 필드
                   SizedBox(
