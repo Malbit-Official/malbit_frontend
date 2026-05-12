@@ -138,7 +138,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               IconButton(
                 alignment: Alignment.centerLeft,
                 padding: EdgeInsets.zero,
-                icon: const Icon(Icons.arrow_back_ios_new, size: 30),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 30),
                 onPressed: () {
                   Navigator.pop(context);
                 },
