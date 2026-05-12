@@ -330,8 +330,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
         selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
         eventLoader: _getEventsForDay,
         onPageChanged: (focusedDay) {
+          final now = DateTime.now();
           setState(() {
             _focusedDay = focusedDay;
+
+            if (focusedDay.year == now.year && focusedDay.month == now.month) {
+              _selectedDay = now;
+            } else {
+              _selectedDay = DateTime(focusedDay.year, focusedDay.month, 1);
+            }
           });
           _loadAllCalendarData(isSilent: true);
         },
@@ -347,13 +354,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
           outsideTextStyle: TextStyle(fontSize: 13, color: Color(0xFFE0E0E0)),
           defaultTextStyle: TextStyle(fontSize: 13, color: Colors.black),
           weekendTextStyle: TextStyle(fontSize: 13, color: Colors.redAccent),
+
           selectedTextStyle: TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold),
           selectedDecoration: BoxDecoration(color: Color(0xff4882FD), shape: BoxShape.circle),
+
           todayTextStyle: TextStyle(fontSize: 13, color: Color(0xff4882FD), fontWeight: FontWeight.bold),
           todayDecoration: BoxDecoration(
-            color: Colors.transparent,
+            color: Color(0x264882FD),
             shape: BoxShape.circle,
-            border: Border.fromBorderSide(BorderSide(color: Color(0xff4882FD), width: 1.5)),
           ),
         ),
       ),
@@ -469,7 +477,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ],
             ),
 
-            // [추가] 공휴일 안내 배너
+            // 공휴일 안내 배너
             if (holidayName != null) ...[
               const SizedBox(height: 12),
               Container(
@@ -505,11 +513,30 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 padding: EdgeInsets.zero,
                 itemCount: events.length,
                 itemBuilder: (context, index) {
+                  final event = events[index];
                   return EventItemWidget(
-                    event: events[index],
-                    onTap: () => _handleUpdateEvent(events[index]),
-                    onLongPress: () => _handleDeleteEvent(events[index], index),
-                    onChanged: (val) => setState(() => events[index].isDone = val ?? false),
+                    event: event,
+                    onTap: () => _handleUpdateEvent(event),
+                    onLongPress: () => _handleDeleteEvent(event, index),
+                    onChanged: (val) async {
+                      if (event.taskId == null) return;
+                      final token = await _storage.read(key: 'accessToken') ?? "";
+
+                      // 1. 서버에 토글 요청
+                      final result = await CalendarService.toggleEventStatus(
+                        token: token,
+                        taskId: event.taskId!,
+                      );
+
+                      if (result['success']) {
+                        setState(() {
+                          event.isDone = result['data'] as bool? ?? false;
+                        });
+                        _refreshUpcomingOnly(token);
+                      } else {
+                        _showErrorSnackBar(result['message'] ?? "상태 변경 실패");
+                      }
+                    },
                   );
                 },
               ),

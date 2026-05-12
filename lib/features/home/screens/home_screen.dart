@@ -11,7 +11,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -36,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            // [상단 고정 영역] 로고 및 메인 배너
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 5, 20, 25),
@@ -119,9 +120,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // 하단 콘텐츠 영역
+            // [하단 스크롤 영역] 캘린더, 버튼, 업무 기록
             Expanded(
-              child: Padding(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
                 child: Column(
                   children: [

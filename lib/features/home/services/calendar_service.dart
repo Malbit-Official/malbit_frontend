@@ -149,4 +149,33 @@ class CalendarService {
       return {'success': false, 'message': '서버 연결 실패: $e'};
     }
   }
+
+  // 6. 일정 완료 상태 토글 (PATCH /api/calendar/{taskId}/toggle)
+  static Future<Map<String, dynamic>> toggleEventStatus({
+    required String token,
+    required int taskId,
+  }) async {
+    final url = Uri.parse('$baseUrl/api/calendar/$taskId/toggle');
+
+    try {
+      final response = await http.patch(url, headers: _getHeaders(token));
+
+      print("일정 토글 요청 URL: $url");
+      print("일정 토글 응답 코드: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        final decodedData = jsonDecode(utf8.decode(response.bodyBytes));
+        print("🔥 서버에서 온 실제 데이터: ${response.body}");
+        return {
+          'success': true,
+          'data': decodedData['data'] as bool? ?? false,
+        };
+      } else {
+        return {'success': false, 'message': '서버 에러: ${response.statusCode}'};
+      }
+    } catch (e) {
+      print("일정 토글 에러: $e");
+      return {'success': false, 'message': '서버 연결 실패: $e'};
+    }
+  }
 }
