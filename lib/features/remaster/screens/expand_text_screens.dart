@@ -9,36 +9,47 @@ class ExpandTextScreens extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      body: Stack(
-        children: [
-
-          // 중앙 텍스트
-          Center(
-            child: RotatedBox(
-              quarterTurns: 1,
-              child: Text(
-                text,
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // 중앙 텍스트
+            Center(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: RotatedBox(
+                  quarterTurns: 1,
+                  child: Container(
+                    padding: const EdgeInsets.all(50.0),
+                    constraints: const BoxConstraints(maxWidth: 1000),
+                    child: Text(
+                      text,
+                      style: const TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                      softWrap: true,
+                    ),
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
-          ),
 
-          // 닫기 버튼
-          Positioned(
-            right: 20,
-            bottom: 20,
-            child: IconButton(
-              icon: Icon(Icons.close_rounded, size: 40, color: Colors.black),
-              onPressed: () {
-                Navigator.pop(context);
-              },
+            // 닫기 버튼
+            Positioned(
+              right: 20,
+              bottom: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close_rounded, size: 40, color: Colors.black),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
