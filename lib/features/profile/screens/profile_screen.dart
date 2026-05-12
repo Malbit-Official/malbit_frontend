@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/features/main_navigation/widgets/bottom_nav.dart';
 import 'package:malbit_frontend/features/profile/screens/job_environment_screen.dart';
-import 'package:malbit_frontend/features/voice_settings/screens/voice_register_screen.dart';
 import 'package:malbit_frontend/features/profile/screens/edit_profile_screen.dart';
 import 'package:malbit_frontend/core/services/storage.dart';
 
@@ -149,14 +148,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     print("직무 변경 응답: ${response.body}");
   }
-  Future<void> _deleteVoice() async {
-    final token = await AppStorage.storage.read(key: 'accessToken');
-    final response = await http.delete(
-      Uri.parse('http://3.37.239.105:8080/api/users/voice'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    print('음성 삭제 응답: ${response.statusCode}');
-  }
 
   Future<void> _logout() async {
     final token = await AppStorage.storage.read(key: 'accessToken');
@@ -187,36 +178,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
   }
-
-  void _showDeleteDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("음성 삭제"),
-          content: const Text("등록된 음성을 정말 삭제하시겠습니까?"),
-          actions: [
-            OutlinedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("취소"),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red[100]),
-              onPressed: () async {
-                Navigator.pop(context);
-                await _deleteVoice(); // ← 여기서 호출
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("음성이 삭제되었습니다.")),
-                );
-              },
-              child: const Text("삭제"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -412,31 +373,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   const Divider(),
 
-                  Row(
-                    mainAxisAlignment:
-                    MainAxisAlignment.spaceEvenly,
-                    children:  [
-
-                      _SmallButton(
-                        text: "음성 재등록",
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const VoiceRegisterScreen(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      _SmallButton(
-                        text: "음성 삭제",
-                        onTap: () {
-                          _showDeleteDialog(context);
-                        },
-                      ),
-                    ],
-                  )
                 ],
               ),
             ),
