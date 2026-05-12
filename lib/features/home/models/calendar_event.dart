@@ -24,10 +24,10 @@ class CalendarEvent {
     return CalendarEvent(
       taskId: json['task_id'],
       title: json['content'] ?? '',
+      isDone: json['is_completed'] ?? json['isCompleted'] ?? json['completed'] ?? false,
       startAt: json['start_at'] != null ? DateTime.parse(json['start_at']) : null,
       endAt: json['end_at'] != null ? DateTime.parse(json['end_at']) : null,
       category: json['category'],
-      isDone: false,
       dDay: json['d_day'],
       remainingTime: json['remaining_time'],
     );
