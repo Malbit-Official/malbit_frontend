@@ -44,42 +44,44 @@ class _RoleplayListScreenState extends State<RoleplayListScreen> {
   Future<void> _startAutoListen() async {
     final available = await _speech.initialize(
       onError: (error) {
-        setState(() {
-          isListening = false;
-          isAnalyzing = false;
-        });
+        debugPrint('🎙 STT 에러: $error');
+        if (!mounted) return;
+        setState(() { isListening = false; isAnalyzing = false; });
       },
       onStatus: (status) {
-        // 녹음이 자동으로 끝났을 때 (침묵 감지)
+        debugPrint('🎙 STT 상태: $status'); // ← 상태 변화 추적
+        if (!mounted) return;
         if (status == 'done' || status == 'notListening') {
+          debugPrint('🎙 녹음 종료 - 인식된 텍스트: "$recognizedText"');
           if (recognizedText.trim().isNotEmpty && !isLoading) {
             setState(() => isListening = false);
             _getRecommendations(null, recognizedText.trim());
           } else {
+            debugPrint('🎙 텍스트 없음 - 추천 안 함');
             setState(() => isListening = false);
           }
         }
       },
     );
 
-    if (!available) return;
+    debugPrint('🎙 STT 사용 가능: $available'); // ← 초기화 성공 여부
 
-    setState(() {
-      isListening = true;
-      recognizedText = "";
-    });
+    if (!available) {
+      debugPrint('🎙 STT 초기화 실패!');
+      return;
+    }
+
+    setState(() { isListening = true; recognizedText = ""; });
 
     _speech.listen(
       onResult: (result) {
-        setState(() {
-          recognizedText = result.recognizedWords;
-        });
+        debugPrint('🎙 인식 중: "${result.recognizedWords}" / final: ${result.finalResult}');
+        setState(() { recognizedText = result.recognizedWords; });
 
-        // finalResult가 true면 음성 인식 완료된 것
         if (result.finalResult && recognizedText.trim().isNotEmpty) {
           _silenceTimer?.cancel();
           _silenceTimer = Timer(const Duration(seconds: 1), () {
-            if (!isLoading) {
+            if (!isLoading && mounted) {
               _speech.stop();
               setState(() => isListening = false);
               _getRecommendations(null, recognizedText.trim());
@@ -112,6 +114,7 @@ class _RoleplayListScreenState extends State<RoleplayListScreen> {
 
     try {
       final token = await AppStorage.storage.read(key: 'accessToken');
+      debugPrint('🔑 토큰: $token');
 
       final body = {
         'category': category ?? '',
@@ -559,26 +562,7 @@ class _RoleplayListScreenState extends State<RoleplayListScreen> {
                         ),
                       ),
                     )),
-                    const SizedBox(height: 6),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4882FD),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () {
-                          // OrderScreen 연결
-                        },
-                        child: const Text(
-                          '🎤 직접 말해보기',
-                          style:
-                          TextStyle(fontSize: 16, color: Colors.white),
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
               ),
