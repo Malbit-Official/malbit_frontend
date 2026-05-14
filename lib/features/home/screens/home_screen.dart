@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../../core/services/storage.dart';
+import '../../main_navigation/screens/main_screen.dart';
+import '../../record/screens/record_screen.dart';
 import 'calendar_screen.dart';
 import 'package:malbit_frontend/features/roleplay/screens/roleplay_list_screen.dart';
 
@@ -332,15 +335,52 @@ class _HomeScreenState extends State<HomeScreen> {
       final path = await _audioRecorder.stop();
       setState(() => _isRecording = false);
       if (path != null) {
+        // 로딩 다이얼로그 표시
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => const Center(
+            child: CircularProgressIndicator(color: Color(0xFF4882FD)),
+          ),
+        );
+
         try {
           final token = await AppStorage.storage.read(key: 'accessToken') ?? "";
-          var request = http.MultipartRequest('POST', Uri.parse('http://3.37.239.105:8080/api/remaster/analyze-meeting'));
-          request.headers.addAll({'Authorization': 'Bearer $token', 'Accept': 'application/json'});
+          var request = http.MultipartRequest(
+            'POST',
+            Uri.parse('http://3.37.239.105:8080/api/remaster/analyze-meeting'),
+          );
+          request.headers.addAll({
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          });
           request.files.add(await http.MultipartFile.fromPath('audio_file', path));
-          var response = await http.Response.fromStream(await request.send().timeout(const Duration(minutes: 5)));
-          debugPrint(response.statusCode == 200 ? "✅ 분석 완료" : "❌ 에러: ${response.statusCode}");
+
+          var response = await http.Response.fromStream(
+            await request.send().timeout(const Duration(minutes: 5)),
+          );
+
+          if (!mounted) return;
+          Navigator.pop(context);
+
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            debugPrint("✅ 분석 완료: ${response.body}");
+            MainScreen.mainScreenState?.setTabIndex(4);
+          } else {
+            debugPrint("❌ 에러: ${response.statusCode}");
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('분석 실패 (${response.statusCode}). 다시 시도해주세요.')),
+            );
+          }
         } catch (e) {
+          if (!mounted) return;
+          Navigator.pop(context);
           debugPrint("⚠️ 실패: $e");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('오류가 발생했습니다. 네트워크를 확인해주세요.')),
+          );
         }
       }
     }

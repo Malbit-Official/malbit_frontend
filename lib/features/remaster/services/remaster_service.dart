@@ -27,7 +27,7 @@ class RemasterService {
     ));
 
     try {
-      final streamedResponse = await request.send().timeout(const Duration(seconds: 60));
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 10000));
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
