@@ -38,7 +38,6 @@ class _RoleplayListScreenState extends State<RoleplayListScreen> {
   void initState() {
     super.initState();
     _speech = stt.SpeechToText();
-    _startAutoListen(); // 화면 진입 시 자동 녹음 시작
   }
 
   Future<void> _startAutoListen() async {
@@ -246,7 +245,7 @@ class _RoleplayListScreenState extends State<RoleplayListScreen> {
                 children: [
                   Row(
                     children: [
-                      const Text('🎙 주변 상황을 듣고 있어요',
+                      const Text('🎙 상황을 말해보세요',
                           style: TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold)),
                       const Spacer(),
@@ -282,12 +281,12 @@ class _RoleplayListScreenState extends State<RoleplayListScreen> {
                               color: const Color(0xFFE8F0FF),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
                                 Icon(Icons.mic,
                                     color: Color(0xFF4882FD), size: 16),
                                 SizedBox(width: 4),
-                                Text('다시 듣기',
+                                Text(recognizedText.isEmpty ? '녹음 시작' : '다시 녹음',
                                     style: TextStyle(
                                         color: Color(0xFF4882FD),
                                         fontSize: 13)),
