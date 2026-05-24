@@ -168,19 +168,19 @@ class _SummaryScreenState extends State<SummaryScreen> {
             return const Center(child: CircularProgressIndicator(color: Color(0xFF4882FD)));
           }
 
-          // 서버 데이터 성공 여부 판단 후 가짜 데이터 결합
-          final LogDetail detail = (snapshot.hasData && snapshot.data?['success'] == true)
-              ? snapshot.data!['detail']
-              : LogDetail(
-            logId: widget.logId,
-            title: widget.meetingTitle,
-            date: widget.dateTimeText.split(' ')[0],
-            startTime: widget.dateTimeText.split(' ')[1],
-            duration: widget.durationText,
-            summaries: ['메인 페이지 및 로그인 UI 완료', '백엔드 API 기본 구조 완성', 'API 인증 로직 관련 지연 사항 논의'],
-            decisions: ['이번 주 안으로 API 명세 확정', '디자인 피드백 반영 후 수정'],
-            todos: [TodoItem(assignee: '참여자 3', content: 'API 응답 문서 정리')],
-          );
+          LogDetail detail;
+
+          if (snapshot.hasData && snapshot.data?['success'] == true && snapshot.data?['detail'] != null) {
+            try {
+              // 맵 데이터를 팩토리 생성자에 태워 정상 파싱합니다.
+              detail = LogDetail.fromJson(snapshot.data!['detail']);
+            } catch (e) {
+              debugPrint("❌ LogDetail 파싱 실패 에러: $e");
+              detail = _buildFallbackDetail();
+            }
+          } else {
+            detail = _buildFallbackDetail();
+          }
 
           return SafeArea(
             child: Column(
@@ -191,15 +191,32 @@ class _SummaryScreenState extends State<SummaryScreen> {
                   padding: const EdgeInsets.only(bottom: 30),
                   child: Column(
                     children: [
-                      Align(alignment: Alignment.topLeft, child: Padding(padding: const EdgeInsets.only(left: 10, top: 20), child: IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.arrow_back_ios_new, size: 25, color: Colors.black)))),
+                      Align(
+                          alignment: Alignment.topLeft,
+                          child: Padding(
+                              padding: const EdgeInsets.only(left: 10, top: 20),
+                              child: IconButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  icon: const Icon(Icons.arrow_back_ios_new, size: 25, color: Colors.black)
+                              )
+                          )
+                      ),
                       const SizedBox(height: 10),
-                      Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: Text(detail.title, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black), textAlign: TextAlign.center)),
+                      Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(detail.title, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black), textAlign: TextAlign.center)
+                      ),
                       const SizedBox(height: 12),
                       Text('${detail.date} ${detail.startTime}  -  ${detail.duration}', style: const TextStyle(fontSize: 15, color: Color(0xFF868686))),
                     ],
                   ),
                 ),
-                Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 16), decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFCECECE), width: 1.2))), child: const Center(child: Text('요약', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)))),
+                Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFCECECE), width: 1.2))),
+                    child: const Center(child: Text('요약', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)))
+                ),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 25),
@@ -223,6 +240,24 @@ class _SummaryScreenState extends State<SummaryScreen> {
           );
         },
       ),
+    );
+  }
+
+  // 💡 데이터가 누락되거나 에러가 났을 때 작동하는 안전한 Fallback 데이터 생성기
+  LogDetail _buildFallbackDetail() {
+    final dateParts = widget.dateTimeText.split(' ');
+    final fallbackDate = dateParts.isNotEmpty ? dateParts[0] : '';
+    final fallbackTime = dateParts.length > 1 ? dateParts[1] : '';
+
+    return LogDetail(
+      logId: widget.logId,
+      title: widget.meetingTitle,
+      date: fallbackDate,
+      startTime: fallbackTime,
+      duration: widget.durationText,
+      summaries: ['메인 페이지 및 로그인 UI 완료', '백엔드 API 기본 구조 완성', 'API 인증 로직 관련 지연 사항 논의'],
+      decisions: ['이번 주 안으로 API 명세 확정', '디자인 피드백 반영 후 수정'],
+      todos: [TodoItem(assignee: '참여자 3', content: 'API 응답 문서 정리')],
     );
   }
 }
