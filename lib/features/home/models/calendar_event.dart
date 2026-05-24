@@ -21,15 +21,32 @@ class CalendarEvent {
   });
 
   factory CalendarEvent.fromJson(Map<String, dynamic> json) {
+
+    final rawCompleted = json['is_completed'] ??
+        json['isCompleted'] ??
+        json['completed'] ??
+        json['completedAt'] ??
+        false;
+
+    bool parsedIsDone = false;
+
+    if (rawCompleted is bool) {
+      parsedIsDone = rawCompleted;
+    } else if (rawCompleted is int) {
+      parsedIsDone = rawCompleted == 1;
+    } else if (rawCompleted is String) {
+      parsedIsDone = rawCompleted.toLowerCase() == 'true' || rawCompleted == '1';
+    }
+
     return CalendarEvent(
-      taskId: json['task_id'],
-      title: json['content'] ?? '',
-      isDone: json['is_completed'] ?? json['isCompleted'] ?? json['completed'] ?? false,
-      startAt: json['start_at'] != null ? DateTime.parse(json['start_at']) : null,
-      endAt: json['end_at'] != null ? DateTime.parse(json['end_at']) : null,
+      taskId: json['task_id'] ?? json['taskId'],
+      title: json['content'] ?? json['title'] ?? '',
+      isDone: parsedIsDone,
+      startAt: json['start_at'] != null ? DateTime.parse(json['start_at']) : (json['start_time'] != null ? DateTime.parse(json['start_time']) : null),
+      endAt: json['end_at'] != null ? DateTime.parse(json['end_at']) : (json['end_time'] != null ? DateTime.parse(json['end_time']) : null),
       category: json['category'],
-      dDay: json['d_day'],
-      remainingTime: json['remaining_time'],
+      dDay: json['d_day'] ?? json['dday'],
+      remainingTime: json['remaining_time'] ?? json['remainingTime'],
     );
   }
 

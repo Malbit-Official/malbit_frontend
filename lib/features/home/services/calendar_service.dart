@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class CalendarService {
@@ -10,7 +11,7 @@ class CalendarService {
     'Accept': 'application/json',
   };
 
-  // 1. 월간/주간 일정 조회 (GET /api/calendar?query_date=yyyy-MM-dd)
+  // 월간/주간 일정 조회
   static Future<Map<String, dynamic>> fetchMonthlyEvents({
     required String token,
     required String queryDate,
@@ -23,9 +24,10 @@ class CalendarService {
       print("일정 조회 응답 코드: ${response.statusCode}");
       if (response.statusCode == 200) {
         final decodedData = jsonDecode(utf8.decode(response.bodyBytes));
+
         return {
           'success': true,
-          'data': decodedData['data'],
+          'data': decodedData['data'] ?? [],
         };
       } else {
         return {'success': false, 'message': '서버 에러: ${response.statusCode}'};
@@ -36,7 +38,7 @@ class CalendarService {
     }
   }
 
-  // 2. 일정 수동 등록 (POST /api/calendar/manual)
+  // 일정 수동 등록
   static Future<Map<String, dynamic>> addEvent({
     required String token,
     required String title,
@@ -60,7 +62,7 @@ class CalendarService {
         final decodedData = jsonDecode(utf8.decode(response.bodyBytes));
         return {
           'success': true,
-          'taskId': decodedData['data']?['task_id'],
+          'taskId': decodedData['data'],
         };
       } else {
         return {'success': false, 'message': '서버 에러: ${response.statusCode}'};
@@ -71,7 +73,7 @@ class CalendarService {
     }
   }
 
-  // 3. 일정 수정 (PATCH /api/calendar/{taskId})
+  // 일정 수정
   static Future<Map<String, dynamic>> updateEvent({
     required String token,
     required int taskId,
@@ -103,7 +105,7 @@ class CalendarService {
     }
   }
 
-  // 4. 일정 삭제 (DELETE /api/calendar/{taskId})
+  // 일정 삭제
   static Future<Map<String, dynamic>> deleteEvent({
     required String token,
     required int taskId,
@@ -125,7 +127,7 @@ class CalendarService {
     }
   }
 
-  // 5. 다가오는 일정 조회 (GET /api/calendar/upcoming)
+  // 다가오는 일정 조회
   static Future<Map<String, dynamic>> fetchUpcomingEvents({
     required String token,
   }) async {
@@ -150,7 +152,7 @@ class CalendarService {
     }
   }
 
-  // 6. 일정 완료 상태 토글 (PATCH /api/calendar/{taskId}/toggle)
+  // 일정 완료 상태 토글
   static Future<Map<String, dynamic>> toggleEventStatus({
     required String token,
     required int taskId,
@@ -165,10 +167,19 @@ class CalendarService {
 
       if (response.statusCode == 200) {
         final decodedData = jsonDecode(utf8.decode(response.bodyBytes));
-        print("🔥 서버에서 온 실제 데이터: ${response.body}");
+        print("🔥 실제 데이터 원본: ${response.body}");
+
+        final rawData = decodedData['data'];
+        bool parsedStatus = false;
+        if (rawData is bool) {
+          parsedStatus = rawData;
+        } else if (rawData is String) {
+          parsedStatus = rawData.toLowerCase() == 'true';
+        }
+
         return {
           'success': true,
-          'data': decodedData['data'] as bool? ?? false,
+          'data': parsedStatus,
         };
       } else {
         return {'success': false, 'message': '서버 에러: ${response.statusCode}'};

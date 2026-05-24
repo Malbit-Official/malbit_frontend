@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class LogDetail {
   final int logId;
   final String title;
@@ -22,33 +24,44 @@ class LogDetail {
   });
 
   factory LogDetail.fromJson(Map<String, dynamic> json) {
-
-    // summary와 summaries(리스트) 모두 대응 가능하도록 수정
+    // [회의 요약]
     List<String> summaryList = [];
     if (json['summaries'] != null && json['summaries'] is List) {
       summaryList = List<String>.from(json['summaries']);
-    } else {
-      String aiSummary = json['summary'] ?? '';
+    } else if (json['summary'] != null && json['summary'] is String) {
+      final String aiSummary = json['summary'];
       if (aiSummary.isNotEmpty) summaryList = [aiSummary];
     }
 
+    // [ 정한 내용(결정사항)]
+    List<String> decisionList = [];
+    final rawChecklist = json['checklists'] ?? json['checklist'] ?? [];
+    if (rawChecklist is List) {
+      decisionList = rawChecklist.map((item) => item.toString()).toList();
+    }
+
+    // [앞으로 해야 할 일 가공]
+    List<TodoItem> todoList = [];
+    if (json['schedules'] != null && json['schedules'] is List) {
+      try {
+        todoList = (json['schedules'] as List)
+            .map((t) => TodoItem.fromJson(t as Map<String, dynamic>))
+            .toList();
+      } catch (e) {
+        debugPrint("⚠️ schedules (TodoItem) 파싱 실패: $e");
+      }
+    }
+
     return LogDetail(
-      logId: json['logId'] ?? 0,
+      logId: json['logId'] ?? json['log_id'] ?? 0,
       title: json['title'] ?? '제목 없음',
       date: json['date'] ?? '',
-      startTime: json['startTime'] ?? '',
+      startTime: json['startTime'] ?? json['start_time'] ?? '',
       duration: json['duration'] ?? '',
-
       rawContent: json['rawText'] ?? json['raw_text'],
-
       summaries: summaryList,
-
-      decisions: List<String>.from(json['checklist'] ?? json['checklists'] ?? []),
-
-      todos: (json['schedules'] as List?)
-          ?.map((t) => TodoItem.fromJson(t))
-          .toList() ??
-          [],
+      decisions: decisionList,
+      todos: todoList,
     );
   }
 }

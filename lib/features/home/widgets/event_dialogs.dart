@@ -21,9 +21,9 @@ class EventDialogs {
         return SafeArea(
           child: Padding(
             padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom > 0
+              bottom: (MediaQuery.of(context).viewInsets.bottom > 0
                   ? MediaQuery.of(context).viewInsets.bottom + 15
-                  : bottomPadding - 20,
+                  : bottomPadding - 20).clamp(0.0, double.infinity),
               left: 20,
               right: 20,
               top: 15,
@@ -142,38 +142,42 @@ class EventDialogs {
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
           // 취소 버튼
-          Expanded(
-            child: TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                foregroundColor: Colors.grey,
-              ),
-              child: const Text(
-                "취소",
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          // 삭제 버튼
-          Expanded(
-            child: ElevatedButton(
-              onPressed: onDelete,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.withOpacity(0.1),
-                foregroundColor: Colors.red,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    foregroundColor: Colors.grey,
+                  ),
+                  child: const Text(
+                    "취소",
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+                  ),
                 ),
               ),
-              child: const Text(
-                "삭제",
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              const SizedBox(width: 10),
+              // 삭제 버튼
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: onDelete,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.withOpacity(0.1),
+                    foregroundColor: Colors.red,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    "삭제",
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),
