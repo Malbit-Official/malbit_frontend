@@ -365,7 +365,6 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.pop(context);
 
           if (response.statusCode == 200) {
-            final data = jsonDecode(response.body);
             debugPrint("✅ 분석 완료: ${response.body}");
             MainScreen.mainScreenState?.setTabIndex(4);
           } else {

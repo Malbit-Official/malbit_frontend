@@ -4,7 +4,6 @@ import 'package:malbit_frontend/features/record/screens/record_screen.dart';
 import 'package:malbit_frontend/features/remaster/screens/remaster_screen.dart';
 import 'package:malbit_frontend/features/template/screens/template_screen.dart';
 import 'package:malbit_frontend/features/roleplay/screens/roleplay_list_screen.dart';
-
 import 'package:malbit_frontend/features/main_navigation/widgets/bottom_nav.dart';
 
 class MainScreen extends StatefulWidget {
@@ -17,8 +16,11 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-
   int _currentIndex = 2;
+
+  // ← GlobalKey 추가
+  final GlobalKey<RecordScreenState> _recordScreenKey =
+  GlobalKey<RecordScreenState>();
 
   @override
   void initState() {
@@ -30,31 +32,35 @@ class _MainScreenState extends State<MainScreen> {
     setState(() {
       _currentIndex = index;
     });
+    // ← 4번 탭 이동 시 RecordScreen 새로고침
+    if (index == 4) {
+      _recordScreenKey.currentState?.refresh();
+    }
   }
-
-  // 각 탭에 들어갈 화면들
-  final List<Widget> _pages = [
-    const RemasterScreen(),     // 0: AI
-    const RoleplayListScreen(),     // 1: 추천
-    const HomeScreen(),         // 2: 홈 (Scaffold에서 bottomNav가 제거된 버전)
-    const TemplateScreen(), // 3: 학습
-    const RecordScreen(),      // 4: 기록
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // IndexedStack이 모든 화면의 상태를 메모리에 유지해줍니다.
       body: IndexedStack(
         index: _currentIndex,
-        children: _pages,
+        children: [
+          const RemasterScreen(),
+          const RoleplayListScreen(),
+          const HomeScreen(),
+          const TemplateScreen(),
+          RecordScreen(key: _recordScreenKey), // ← key 연결
+        ],
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
-            _currentIndex = index; // 탭 클릭 시 인덱스 변경 -> 화면 전환
+            _currentIndex = index;
           });
+          // ← 탭 클릭으로 4번 이동할 때도 새로고침
+          if (index == 4) {
+            _recordScreenKey.currentState?.refresh();
+          }
         },
       ),
     );
