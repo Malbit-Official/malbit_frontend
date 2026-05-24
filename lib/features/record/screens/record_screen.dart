@@ -8,10 +8,10 @@ class RecordScreen extends StatefulWidget {
   const RecordScreen({super.key});
 
   @override
-  State<RecordScreen> createState() => _RecordScreenState();
+  State<RecordScreen> createState() => RecordScreenState();
 }
 
-class _RecordScreenState extends State<RecordScreen> {
+class RecordScreenState extends State<RecordScreen> {
   final _storage = AppStorage.storage;
   Future<Map<String, dynamic>>? _logsFuture;
   bool _isLoading = false; // [추가] 로딩 상태를 명확히 관리
@@ -19,6 +19,10 @@ class _RecordScreenState extends State<RecordScreen> {
   @override
   void initState() {
     super.initState();
+    _fetchLogs();
+  }
+
+  void refresh() {
     _fetchLogs();
   }
 
@@ -34,8 +38,6 @@ class _RecordScreenState extends State<RecordScreen> {
 
     // 실제 데이터를 가져오는 Future 저장
     _logsFuture = LogService.getLogs(token: token, date: formattedDate);
-
-    // 데이터 요청이 끝난 후 로딩 상태 해제
     await _logsFuture;
 
     if (mounted) {
