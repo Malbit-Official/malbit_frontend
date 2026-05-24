@@ -44,7 +44,11 @@ class _VoiceRegisterScreenState extends State<VoiceRegisterScreen> {
       final filePath = '${dir.path}/voice_$currentIndex.wav';
 
       await _recorder.start(
-        const RecordConfig(encoder: AudioEncoder.wav),
+        const RecordConfig(
+          encoder: AudioEncoder.wav,
+          sampleRate: 16000,
+          numChannels: 1,
+        ),
         path: filePath,
       );
       setState(() {
