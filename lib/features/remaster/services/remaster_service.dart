@@ -32,6 +32,9 @@ class RemasterService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
+
+        print(" [플러터 검증] 서버 응답 원본: $data");
+
         final target = data.containsKey('data') ? data['data'] : data;
 
         return {

@@ -522,7 +522,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       if (event.taskId == null) return;
                       final token = await _storage.read(key: 'accessToken') ?? "";
 
-                      // 1. 서버에 토글 요청
+                      // 서버에 토글 요청
                       final result = await CalendarService.toggleEventStatus(
                         token: token,
                         taskId: event.taskId!,
@@ -530,9 +530,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
                       if (result['success']) {
                         setState(() {
-                          event.isDone = result['data'] as bool? ?? false;
+                          final dateKey = DateTime(_selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
+                          if (_events[dateKey] != null && _events[dateKey]!.length > index) {
+                            _events[dateKey]![index].isDone = result['data'] as bool? ?? false;
+                          }
                         });
-                        _refreshUpcomingOnly(token);
+
+                         final token = await _storage.read(key: 'accessToken') ?? "";
+                         _refreshUpcomingOnly(token);
                       } else {
                         _showErrorSnackBar(result['message'] ?? "상태 변경 실패");
                       }

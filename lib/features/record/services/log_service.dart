@@ -14,7 +14,7 @@ class LogService {
     };
   }
 
-  // 업무 기록 목록 조회
+  // 업무 기록 목록 조회 API
   static Future<Map<String, dynamic>> getLogs({
     required String token,
     String? date,
@@ -37,12 +37,9 @@ class LogService {
         final jsonData = jsonDecode(utf8.decode(response.bodyBytes));
 
         if (jsonData['status'] == 'SUCCESS') {
-          List<dynamic> data = jsonData['data'];
-          List<Log> logs = data.map((json) => Log.fromJson(json)).toList();
-
           return {
             'success': true,
-            'logs': logs,
+            'data': jsonData['data'] ?? [],
             'message': jsonData['message'],
           };
         } else {
@@ -84,11 +81,9 @@ class LogService {
         final jsonData = jsonDecode(utf8.decode(response.bodyBytes));
 
         if (jsonData['status'] == 'SUCCESS') {
-          LogDetail detail = LogDetail.fromJson(jsonData['data']);
-
           return {
             'success': true,
-            'detail': detail,  // LogDetail 객체 반환
+            'detail': jsonData['data'],
             'message': jsonData['message'],
           };
         } else {
@@ -132,38 +127,19 @@ class LogService {
         }),
       );
 
-      print("📡 [POST /logs] 응답 코드: ${response.statusCode}");
-      print("📦 [POST /logs] 응답 내용: ${utf8.decode(response.bodyBytes)}");
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final jsonData = jsonDecode(utf8.decode(response.bodyBytes));
-
         if (jsonData['status'] == 'SUCCESS') {
-          LogDetail detail = LogDetail.fromJson(jsonData['data']);
-
           return {
             'success': true,
-            'detail': detail,
+            'detail': jsonData['data'],
             'message': jsonData['message'],
           };
-        } else {
-          return {
-            'success': false,
-            'message': jsonData['message'] ?? '알 수 없는 오류',
-          };
         }
-      } else {
-        return {
-          'success': false,
-          'message': '서버 에러: ${response.statusCode}',
-        };
       }
+      return {'success': false, 'message': '생성 실패'};
     } catch (e) {
-      print("❌ [POST /logs] 에러: $e");
-      return {
-        'success': false,
-        'message': '서버 연결 실패: $e',
-      };
+      return {'success': false, 'message': '서버 연결 실패: $e'};
     }
   }
 
@@ -177,40 +153,15 @@ class LogService {
       final response = await http.patch(
         Uri.parse('$baseUrl/logs/$logId/memo'),
         headers: _getHeaders(token),
-        body: jsonEncode({
-          'memo': memo,
-        }),
+        body: jsonEncode({'memo': memo}),
       );
-
-      print("📡 [PATCH /logs/$logId/memo] 응답 코드: ${response.statusCode}");
-      print("📦 [PATCH /logs/$logId/memo] 응답 내용: ${utf8.decode(response.bodyBytes)}");
-
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(utf8.decode(response.bodyBytes));
-
-        if (jsonData['status'] == 'SUCCESS') {
-          return {
-            'success': true,
-            'message': jsonData['message'],
-          };
-        } else {
-          return {
-            'success': false,
-            'message': jsonData['message'] ?? '알 수 없는 오류',
-          };
-        }
-      } else {
-        return {
-          'success': false,
-          'message': '서버 에러: ${response.statusCode}',
-        };
+        return {'success': true, 'message': jsonData['message']};
       }
+      return {'success': false, 'message': '메모 수정 실패'};
     } catch (e) {
-      print("❌ [PATCH /logs/$logId/memo] 에러: $e");
-      return {
-        'success': false,
-        'message': '서버 연결 실패: $e',
-      };
+      return {'success': false, 'message': '연결 실패: $e'};
     }
   }
 }

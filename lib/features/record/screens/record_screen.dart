@@ -14,7 +14,7 @@ class RecordScreen extends StatefulWidget {
 class RecordScreenState extends State<RecordScreen> {
   final _storage = AppStorage.storage;
   Future<Map<String, dynamic>>? _logsFuture;
-  bool _isLoading = false; // [추가] 로딩 상태를 명확히 관리
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -22,37 +22,49 @@ class RecordScreenState extends State<RecordScreen> {
     _fetchLogs();
   }
 
-  void refresh() {
-    _fetchLogs();
+  Future<void> refresh() async {
+    await _fetchLogs();
   }
 
-  // [수정] 로딩 상태가 UI에 반영되도록 수정
   Future<void> _fetchLogs() async {
+    if (!mounted) return;
     setState(() {
-      _isLoading = true; // 로딩 시작
+      _isLoading = true;
     });
 
-    final token = await _storage.read(key: 'accessToken') ?? "";
-    final now = DateTime.now();
-    final formattedDate = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    try {
+      final token = await _storage.read(key: 'accessToken') ?? "";
 
-    // 실제 데이터를 가져오는 Future 저장
-    _logsFuture = LogService.getLogs(token: token, date: formattedDate);
-    await _logsFuture;
+      final now = DateTime.now();
+      final year = now.year;
+      final month = now.month.toString().padLeft(2, '0');
+      final day = now.day.toString().padLeft(2, '0');
+      final formattedDate = "$year-$month-$day";
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false; // 로딩 종료
-      });
+      debugPrint(" [목록 요청 날짜 체크]: $formattedDate");
+
+      final futureResult = LogService.getLogs(token: token, date: formattedDate);
+
+      await futureResult;
+
+      if (mounted) {
+        setState(() {
+          _logsFuture = futureResult;
+        });
+      }
+    } catch (e) {
+      debugPrint(" 업무 기록 조회 실패: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    /* [목업 주석 처리]
-    final List<Log> mockItems = [ ... ];
-    */
-
     return Scaffold(
       backgroundColor: const Color(0xFFF7F6F6),
       body: RefreshIndicator(
@@ -76,21 +88,31 @@ class RecordScreenState extends State<RecordScreen> {
                 const SizedBox(height: 10),
                 Expanded(
                   child: _isLoading
-                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF4882FD))) // [수정] _isLoading이 true면 무조건 로딩바 표시
+                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF4882FD)))
                       : FutureBuilder<Map<String, dynamic>>(
                     future: _logsFuture,
                     builder: (context, snapshot) {
-                      // 서버 데이터 추출
                       final List<Log> serverLogs = [];
-                      if (snapshot.hasData && snapshot.data?['logs'] != null) {
-                        serverLogs.addAll(snapshot.data?['logs']);
+
+                      if (snapshot.hasData && snapshot.data != null) {
+                        final rawList = snapshot.data?['data'];
+
+                        if (rawList != null && rawList is List) {
+                          for (var jsonItem in rawList) {
+                            try {
+                              serverLogs.add(Log.fromJson(jsonItem));
+                            } catch (e) {
+                              debugPrint("⚠️ Log 파싱 중 에러 발생: $e, 데이터 원본: $jsonItem");
+                            }
+                          }
+                        }
                       }
 
                       if (serverLogs.isEmpty) {
                         return const Center(
                           child: SingleChildScrollView(
                             physics: AlwaysScrollableScrollPhysics(),
-                            child: Text('기록된 대화가 없습니다.', style: TextStyle(color: Colors.grey)),
+                            child: Text('기록된 대화가 없습니다.', style: TextStyle(color: Colors.grey, fontSize: 16)),
                           ),
                         );
                       }

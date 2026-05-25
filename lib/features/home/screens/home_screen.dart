@@ -366,7 +366,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
           if (response.statusCode == 200) {
             debugPrint("✅ 분석 완료: ${response.body}");
-            MainScreen.mainScreenState?.setTabIndex(4);
+
+            await Future.delayed(const Duration(milliseconds: 1000));
+
+            if (mounted) {
+              MainScreen.mainScreenState?.setTabIndex(4);
+            }
           } else {
             debugPrint("❌ 에러: ${response.statusCode}");
             ScaffoldMessenger.of(context).showSnackBar(
