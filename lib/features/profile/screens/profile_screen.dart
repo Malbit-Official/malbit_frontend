@@ -49,6 +49,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  String convertJobToKorean(String job) {
+    switch (job) {
+      case "OFFICE": return "사무직";
+      case "SALES": return "영업 / 고객상담";
+      case "MEDICAL": return "의료 / 간호";
+      case "EDUCATION": return "교육 / 학교";
+      case "SERVICE": return "서비스 / 매장";
+      case "ETC": return "기타";
+      default: return job;
+    }
+  }
+
   Future<void> _loadUserInfo() async {
     try {
       final token = await AppStorage.storage.read(key: 'accessToken');
@@ -71,11 +83,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           userName = user['name'] ?? "";
           email = user['email'] ?? "";
-          currentJob = user['jobType'] ?? "";
+          currentJob = convertJobToKorean(user['jobType'] ?? "");
           disabilityType = user['disabilityType'] ?? "";
           cognitiveLevel = user['cognitiveLevel'] ?? "";
-          profileImagePath = user['profileImage'];
-        });
+          final rawImage = user['profileImage'];
+          profileImagePath = (rawImage != null && rawImage.isNotEmpty)
+              ? 'http://3.37.239.105:8080/uploads/${rawImage.split('/uploads/').last}'
+              : null;        });
       }
     } catch (e) {
       print("유저 정보 API 오류: $e");
@@ -142,7 +156,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'Authorization': 'Bearer $token',
       },
       body: jsonEncode({
-        "jobType": convertJobToEnglish(currentJob),
+        "jobType": convertJobToKorean(currentJob),
       }),
     );
 
