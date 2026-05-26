@@ -60,9 +60,13 @@ class CalendarService {
       print("일정 등록 응답 코드: ${response.statusCode}");
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decodedData = jsonDecode(utf8.decode(response.bodyBytes));
+        final data = decodedData['data'];
+
+        final taskId = (data is Map) ? data ['task_id'] : data;
+
         return {
           'success': true,
-          'taskId': decodedData['data'],
+          'taskId': taskId,
         };
       } else {
         return {'success': false, 'message': '서버 에러: ${response.statusCode}'};

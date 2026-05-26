@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../../core/services/storage.dart';
 import '../models/log_detail.dart';
 import '../services/log_service.dart';
@@ -39,7 +38,32 @@ class _SummaryScreenState extends State<SummaryScreen> {
       _logDetailFuture = LogService.getLogDetail(
         token: token,
         logId: widget.logId,
-      );
+      ).then((result) {
+        // 💡 [해결 핵심] LogDetail.fromJson 파싱과 상관없이, 서버 Raw Response에서 메모 데이터를 직접 추출하여 동기화합니다.
+        if (result['success'] == true && result['detail'] != null) {
+          try {
+            final detailData = result['detail'];
+
+            // 1. 서버가 'memos'라는 이름의 배열/리스트로 내려줄 때
+            if (detailData['memos'] is List) {
+              userMemos = List<String>.from(detailData['memos']);
+            }
+            // 2. 서버가 'memoList'라는 이름의 배열/리스트로 내려줄 때
+            else if (detailData['memoList'] is List) {
+              userMemos = List<String>.from(detailData['memoList']);
+            }
+            // 3. 서버가 단일 문자열 'memo' 필드로 내려줄 때 (예: "메모내용")
+            else if (detailData['memo'] != null && detailData['memo'].toString().isNotEmpty) {
+              userMemos = [detailData['memo'].toString()];
+            }
+
+            debugPrint("✅ 백엔드로부터 불러온 메모 목록: $userMemos");
+          } catch (e) {
+            debugPrint("⚠️ 서버 메모 파싱 에러: $e");
+          }
+        }
+        return result;
+      });
     });
   }
 
@@ -76,13 +100,40 @@ class _SummaryScreenState extends State<SummaryScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (memoController.text.trim().isNotEmpty) {
-                      setState(() { userMemos.add(memoController.text.trim()); });
+                  onPressed: () async {
+                    final memoText = memoController.text.trim();
+                    if (memoText.isNotEmpty) {
+                      // 1. 화면 UI에 즉시 반영
+                      setState(() { userMemos.add(memoText); });
+                      Navigator.pop(context);
+
+                      try {
+                        // 2. 백엔드 서버에 메모 데이터 영구 저장 요청
+                        final token = await _storage.read(key: 'accessToken') ?? "";
+                        final result = await LogService.updateMemo(
+                          token: token,
+                          logId: widget.logId,
+                          memo: memoText,
+                        );
+
+                        if (result['success'] == true) {
+                          debugPrint("✅ 메모가 서버에 성공적으로 저장되었습니다.");
+                          // 저장 성공 후 데이터 정합성을 위해 서버 데이터를 한 번 더 당겨옵니다.
+                          _loadData();
+                        } else {
+                          debugPrint("⚠️ 서버 메모 저장 실패: ${result['message']}");
+                        }
+                      } catch (e) {
+                        debugPrint("❌ 메모 저장 중 통신 에러: $e");
+                      }
+                    } else {
+                      Navigator.pop(context);
                     }
-                    Navigator.pop(context);
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4882FD), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4882FD),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
+                  ),
                   child: const Text('저장하기', style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
               ),
@@ -129,8 +180,12 @@ class _SummaryScreenState extends State<SummaryScreen> {
           const Divider(height: 1, color: Color(0xFFEBEBEB)),
           Padding(
             padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
-            child: Column(
-              children: bullets.map((b) => Padding(
+            child: bullets.isEmpty
+                ? const Text('정리된 내용이 없습니다.',
+                style: TextStyle(fontSize: 15, color: Colors.grey))
+                : Column(
+              children: bullets
+                  .map((b) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,7 +203,8 @@ class _SummaryScreenState extends State<SummaryScreen> {
                     ),
                   ],
                 ),
-              )).toList(),
+              ))
+                  .toList(),
             ),
           ),
         ],
@@ -163,7 +219,6 @@ class _SummaryScreenState extends State<SummaryScreen> {
       body: FutureBuilder<Map<String, dynamic>>(
         future: _logDetailFuture,
         builder: (context, snapshot) {
-          // 데이터 대기 중일 때만 로딩 표시
           if (_logDetailFuture == null || snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(color: Color(0xFF4882FD)));
           }
@@ -172,7 +227,6 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
           if (snapshot.hasData && snapshot.data?['success'] == true && snapshot.data?['detail'] != null) {
             try {
-              // 맵 데이터를 팩토리 생성자에 태워 정상 파싱합니다.
               detail = LogDetail.fromJson(snapshot.data!['detail']);
             } catch (e) {
               debugPrint("❌ LogDetail 파싱 실패 에러: $e");
@@ -181,6 +235,50 @@ class _SummaryScreenState extends State<SummaryScreen> {
           } else {
             detail = _buildFallbackDetail();
           }
+
+          String displayTitle = (detail.title.isEmpty || detail.title == '제목 없음' || detail.title.contains('업무 분석'))
+              ? widget.meetingTitle
+              : detail.title;
+
+          if (detail.todos.isNotEmpty) {
+            final firstTodo = detail.todos.first;
+            String cleanTodoTitle = firstTodo.content;
+
+            if (cleanTodoTitle.contains(']')) {
+              cleanTodoTitle = cleanTodoTitle.split(']').last.trim();
+            }
+            if (cleanTodoTitle.contains('(')) {
+              cleanTodoTitle = cleanTodoTitle.split('(').first.trim();
+            }
+
+            if (cleanTodoTitle.isNotEmpty) {
+              displayTitle = cleanTodoTitle;
+            }
+          }
+
+          String displayDate = detail.date;
+          String displayStartTime = detail.startTime;
+
+          if (displayDate.isEmpty || displayStartTime.isEmpty) {
+            if (widget.dateTimeText.contains(' ')) {
+              final parts = widget.dateTimeText.split(' ');
+              if (parts.length >= 2) {
+                displayDate = displayDate.isEmpty ? parts[0] : displayDate;
+                displayStartTime = displayStartTime.isEmpty ? parts[1] : displayStartTime;
+              }
+            } else {
+              displayDate = displayDate.isEmpty ? widget.dateTimeText : displayDate;
+            }
+          }
+
+          if (displayStartTime.contains(':')) {
+            final timeParts = displayStartTime.split(':');
+            if (timeParts.length >= 2) {
+              displayStartTime = "${timeParts[0]}:${timeParts[1]}";
+            }
+          }
+
+          final displayDuration = detail.duration.isEmpty ? widget.durationText : detail.duration;
 
           return SafeArea(
             child: Column(
@@ -204,10 +302,11 @@ class _SummaryScreenState extends State<SummaryScreen> {
                       const SizedBox(height: 10),
                       Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: Text(detail.title, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black), textAlign: TextAlign.center)
+                          child: Text(displayTitle, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black), textAlign: TextAlign.center)
                       ),
                       const SizedBox(height: 12),
-                      Text('${detail.date} ${detail.startTime}  -  ${detail.duration}', style: const TextStyle(fontSize: 15, color: Color(0xFF868686))),
+                      Text('$displayDate $displayStartTime  -  $displayDuration',
+                          style: const TextStyle(fontSize: 15, color: Color(0xFF868686))),
                     ],
                   ),
                 ),
@@ -226,8 +325,32 @@ class _SummaryScreenState extends State<SummaryScreen> {
                         const SizedBox(height: 30),
                         _sectionCard(emoji: '✅', title: '회의에서 정한 내용이에요', bullets: detail.decisions),
                         const SizedBox(height: 30),
-                        _sectionCard(emoji: '📝', title: '앞으로 해야 할 일이에요', bullets: detail.todos.map((t) => "[${t.assignee}] ${t.content}").toList()),
-                        if (userMemos.isNotEmpty) ...[const SizedBox(height: 30), _sectionCard(emoji: '💡', title: '내가 추가한 메모', titleColor: const Color(0xFF4882FD), bullets: userMemos)],
+                        _sectionCard(
+                          emoji: '📝',
+                          title: '앞으로 해야 할 일이에요',
+                          bullets: detail.todos.map((t) {
+                            String cleanContent = t.content;
+
+                            if (cleanContent.contains(']')) {
+                              cleanContent = cleanContent.split(']').last.trim();
+                            }
+                            if (cleanContent.contains('(')) {
+                              cleanContent = cleanContent.split('(').first.trim();
+                            }
+
+                            return cleanContent;
+                          }).toList(),
+                        ),
+                        // 💡 저장되거나 로드된 userMemos 리스트가 온전하게 카드로 렌더링됩니다.
+                        if (userMemos.isNotEmpty) ...[
+                          const SizedBox(height: 30),
+                          _sectionCard(
+                              emoji: '💡',
+                              title: '내가 추가한 메모',
+                              titleColor: const Color(0xFF4882FD),
+                              bullets: userMemos
+                          )
+                        ],
                         const SizedBox(height: 30),
                         TextButton(onPressed: () => _showMemoSheet(context), child: const Text('메모하기', style: TextStyle(fontSize: 17, color: Color(0xFF4882FD)))),
                         const SizedBox(height: 20),
@@ -243,7 +366,6 @@ class _SummaryScreenState extends State<SummaryScreen> {
     );
   }
 
-  // 💡 데이터가 누락되거나 에러가 났을 때 작동하는 안전한 Fallback 데이터 생성기
   LogDetail _buildFallbackDetail() {
     final dateParts = widget.dateTimeText.split(' ');
     final fallbackDate = dateParts.isNotEmpty ? dateParts[0] : '';

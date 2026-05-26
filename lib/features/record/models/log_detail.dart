@@ -33,27 +33,28 @@ class LogDetail {
       if (aiSummary.isNotEmpty) summaryList = [aiSummary];
     }
 
-    // [ 정한 내용(결정사항)]
+    // [정한 내용(결정사항)] -> 백엔드 응답 키인 'decisions' 추가 반영
     List<String> decisionList = [];
-    final rawChecklist = json['checklists'] ?? json['checklist'] ?? [];
+    final rawChecklist = json['decisions'] ?? json['checklists'] ?? json['checklist'] ?? [];
     if (rawChecklist is List) {
       decisionList = rawChecklist.map((item) => item.toString()).toList();
     }
 
-    // [앞으로 해야 할 일 가공]
+    // [앞으로 해야 할 일 가공] -> 백엔드 응답 키인 'todos' 추가 반영
     List<TodoItem> todoList = [];
-    if (json['schedules'] != null && json['schedules'] is List) {
+    final rawTodos = json['todos'] ?? json['schedules'] ?? [];
+    if (rawTodos is List) {
       try {
-        todoList = (json['schedules'] as List)
+        todoList = rawTodos
             .map((t) => TodoItem.fromJson(t as Map<String, dynamic>))
             .toList();
       } catch (e) {
-        debugPrint("⚠️ schedules (TodoItem) 파싱 실패: $e");
+        debugPrint("⚠️ todos (TodoItem) 파싱 실패: $e");
       }
     }
 
     return LogDetail(
-      logId: json['logId'] ?? json['log_id'] ?? 0,
+      logId: json['logId'] ?? json['log_id'] ?? json['meetingId'] ?? 0,
       title: json['title'] ?? '제목 없음',
       date: json['date'] ?? '',
       startTime: json['startTime'] ?? json['start_time'] ?? '',
@@ -81,8 +82,8 @@ class TodoItem {
 
   factory TodoItem.fromJson(Map<String, dynamic> json) {
     return TodoItem(
-      assignee: json['category'] ?? '업무',
-      content: json['title'] ?? '할 일 내용 없음',
+      assignee: json['assignee'] ?? json['category'] ?? '업무',
+      content: json['content'] ?? json['title'] ?? '할 일 내용 없음',
       time: json['time'],
       importance: json['importance'],
     );
