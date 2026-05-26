@@ -135,31 +135,73 @@ class RecordScreenState extends State<RecordScreen> {
                               separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFEEEEEE), indent: 16, endIndent: 16),
                               itemBuilder: (context, index) {
                                 final item = serverLogs[index];
+
+                                // 💡 1. 타이틀 가공: '2026-05-25 업무 분석'에서 앞의 날짜를 떼어내고 순수 제목만 추출
+                                String displayTitle = item.title;
+                                if (displayTitle.startsWith('202') && displayTitle.contains(' ')) {
+                                  // 공백을 기준으로 쪼갠 뒤 날짜를 제외한 나머지 문자열을 제목으로 사용
+                                  final parts = displayTitle.split(' ');
+                                  if (parts.length > 1) {
+                                    displayTitle = parts.sublist(1).join(' '); // '업무 분석' 추출
+                                  }
+                                }
+
+                                // 💡 2. 날짜 및 시간 포맷팅 가공 (두 번째 사진 스타일: yyyy.MM.dd HH:mm)
+                                // 현재 item.time이 "17:55:25.617" 형태로 들어오므로 시:분까지만 잘라냅니다.
+                                String formattedTime = item.time;
+                                if (formattedTime.contains(':')) {
+                                  final timeParts = formattedTime.split(':');
+                                  if (timeParts.length >= 2) {
+                                    formattedTime = "${timeParts[0]}:${timeParts[1]}"; // "17:55"
+                                  }
+                                }
+
+                                // 오늘 날짜 구하기 (formattedDate와 맵핑하기 위해 포맷 가공)
+                                final now = DateTime.now();
+                                final year = now.year;
+                                final month = now.month.toString().padLeft(2, '0');
+                                final day = now.day.toString().padLeft(2, '0');
+                                final todayStr = "$year.$month.$day"; // "2026.05.25"
+
+                                final displayDateTime = "$todayStr $formattedTime"; // "2026.05.25 17:55"
+
                                 return InkWell(
                                   onTap: () {
                                     Navigator.of(context).push(MaterialPageRoute(
                                       builder: (_) => SummaryScreen(
                                         logId: item.logId,
-                                        meetingTitle: item.title,
-                                        dateTimeText: item.time,
+                                        meetingTitle: displayTitle, // 💡 가공된 깔끔한 제목 전달
+                                        dateTimeText: displayDateTime, // 💡 가공된 날짜시간 전달
                                         durationText: item.duration,
                                       ),
                                     ));
                                   },
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+                                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 18), // 패딩 조정으로 여백 확보
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(item.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Colors.black)),
-                                        const SizedBox(height: 6),
+                                        // 📌 가공된 순수 회의 제목 노출
+                                        Text(
+                                          displayTitle,
+                                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+                                        ),
+                                        const SizedBox(height: 8),
                                         Row(
                                           children: [
-                                            Text(item.time, style: const TextStyle(fontSize: 15, color: Color(0xFF868686))),
+                                            // 📌 두 번째 사진 스타일: 날짜 시간 형식 출력 (2026.05.25 17:55)
+                                            Text(
+                                              displayDateTime,
+                                              style: const TextStyle(fontSize: 15, color: Color(0xFF868686), fontWeight: FontWeight.w400),
+                                            ),
                                             const SizedBox(width: 8),
                                             const Text('-', style: TextStyle(color: Color(0xFF868686))),
                                             const SizedBox(width: 8),
-                                            Text(item.duration, style: const TextStyle(fontSize: 15, color: Color(0xFF868686))),
+                                            // 📌 분석 소요 시간 혹은 상태 노출
+                                            Text(
+                                              item.duration,
+                                              style: const TextStyle(fontSize: 15, color: Color(0xFF868686), fontWeight: FontWeight.w400),
+                                            ),
                                           ],
                                         ),
                                       ],

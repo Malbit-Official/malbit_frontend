@@ -49,16 +49,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
       HolidayService.fetchHolidays(_focusedDay.year, _focusedDay.month),
     ]);
 
-    final monthlyResult = results[0] as Map<String, dynamic>;
-    final upcomingResult = results[1] as Map<String, dynamic>;
+    final monthlyResult = FancyMapping.monthly(results[0]);
+    final upcomingResult = FancyMapping.upcoming(results[1]);
     final holidayData = results[2] as Map<DateTime, String>;
 
     // 월별 일정 데이터 가공 및 저장
-    if (monthlyResult['success']) {
-      final List<dynamic> rawData = monthlyResult['data'] ?? [];
+    if (monthlyResult.isSuccess) {
       Map<DateTime, List<CalendarEvent>> loadedEvents = {};
 
-      for (var dayData in rawData) {
+      for (var dayData in monthlyResult.data) {
         DateTime parsedDate = DateTime.parse(dayData['date']);
         DateTime dateKey = DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
 
@@ -70,14 +69,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
       }
       setState(() => _events = loadedEvents);
     } else {
-      _showErrorSnackBar(monthlyResult['message'] ?? "일정을 불러오지 못했습니다.");
+      _showErrorSnackBar(monthlyResult.message);
     }
 
     // 다가오는 일정 및 공휴일 데이터 상태 업데이트
     setState(() {
-      if (upcomingResult['success']) {
-        final List<dynamic> rawUpcoming = upcomingResult['upcomingTasks'] ?? [];
-        _upcomingEvents = rawUpcoming.map((task) => CalendarEvent.fromJson(task)).toList();
+      if (upcomingResult.isSuccess) {
+        _upcomingEvents = upcomingResult.data.map((task) => CalendarEvent.fromJson(task)).toList();
       }
 
       _holidayMap = holidayData;
@@ -119,12 +117,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
         if (result['success']) {
           setState(() {
+            final rawData = result['taskId'];
+
+            int? parsedTaskId;
+            if (rawData is int) {
+              parsedTaskId = rawData;
+            } else if (rawData != null) {
+              parsedTaskId = int.tryParse(rawData.toString());
+            }
+
+            if (parsedTaskId == null) {
+              _showErrorSnackBar("일정 ID를 받지 못했습니다.");
+              return;
+            }
+
             final newEvent = CalendarEvent(
-              taskId: result['taskId'],
+              taskId: parsedTaskId,
               title: _eventController.text,
               startAt: dateKey,
               endAt: endDateTime,
               category: "업무",
+              isDone: false,
             );
 
             if (_events[dateKey] != null) {
@@ -375,7 +388,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
         DateTime dayOnly = DateTime(day.year, day.month, day.day);
         bool isHoliday = _holidayMap.containsKey(dayOnly);
 
-        // 공휴일이면 빨간색 표시
         if (isHoliday || day.weekday == DateTime.sunday) {
           return Center(
             child: Text(
@@ -477,7 +489,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ],
             ),
 
-            // 공휴일 안내 배너
             if (holidayName != null) ...[
               const SizedBox(height: 12),
               Container(
@@ -522,7 +533,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       if (event.taskId == null) return;
                       final token = await _storage.read(key: 'accessToken') ?? "";
 
-                      // 서버에 토글 요청
                       final result = await CalendarService.toggleEventStatus(
                         token: token,
                         taskId: event.taskId!,
@@ -536,8 +546,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           }
                         });
 
-                         final token = await _storage.read(key: 'accessToken') ?? "";
-                         _refreshUpcomingOnly(token);
+                        final token = await _storage.read(key: 'accessToken') ?? "";
+                        _refreshUpcomingOnly(token);
                       } else {
                         _showErrorSnackBar(result['message'] ?? "상태 변경 실패");
                       }
@@ -550,5 +560,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ),
       ),
     );
+  }
+}
+
+class FancyResult {
+  final bool isSuccess;
+  final List<dynamic> data;
+  final String message;
+  FancyResult(this.isSuccess, this.data, this.message);
+}
+
+class FancyMapping {
+  static FancyResult monthly(dynamic res) {
+    if (res is Map<String, dynamic>) {
+      return FancyResult(res['success'] ?? false, res['data'] ?? [], res['message'] ?? '');
+    }
+    return FancyResult(false, [], '');
+  }
+  static FancyResult upcoming(dynamic res) {
+    if (res is Map<String, dynamic>) {
+      return FancyResult(res['success'] ?? false, res['upcomingTasks'] ?? [], res['message'] ?? '');
+    }
+    return FancyResult(false, [], '');
   }
 }
