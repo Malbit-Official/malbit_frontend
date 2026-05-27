@@ -157,22 +157,28 @@ class CalendarService {
   }
 
   // 일정 완료 상태 토글
+  // 일정 완료 상태를 지정하여 백엔드로 전송 (Body 추가 버전)
   static Future<Map<String, dynamic>> toggleEventStatus({
     required String token,
     required int taskId,
+    required bool isCompleted, // 💡 변경된 true/false 상태 주입받기
   }) async {
     final url = Uri.parse('$baseUrl/api/calendar/$taskId/completion');
 
-    try {
-      final response = await http.patch(url, headers: _getHeaders(token));
+    // 💡 백엔드 TaskCompletionRequest DTO 규격에 맞게 바디 생성
+    final body = jsonEncode({
+      'is_completed': isCompleted,
+    });
 
-      print("일정 토글 요청 URL: $url");
-      print("일정 토글 응답 코드: ${response.statusCode}");
+    try {
+      // 💡 body 파라미터 추가
+      final response = await http.patch(url, headers: _getHeaders(token), body: body);
+
+      print("일정 상태 변경 요청 URL: $url");
+      print("일정 상태 변경 응답 코드: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final decodedData = jsonDecode(utf8.decode(response.bodyBytes));
-        print("🔥 실제 데이터 원본: ${response.body}");
-
         final rawData = decodedData['data'];
         bool parsedStatus = false;
         if (rawData is bool) {
@@ -189,7 +195,7 @@ class CalendarService {
         return {'success': false, 'message': '서버 에러: ${response.statusCode}'};
       }
     } catch (e) {
-      print("일정 토글 에러: $e");
+      print("일정 상태 변경 에러: $e");
       return {'success': false, 'message': '서버 연결 실패: $e'};
     }
   }
