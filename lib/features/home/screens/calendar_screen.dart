@@ -58,6 +58,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       Map<DateTime, List<CalendarEvent>> loadedEvents = {};
 
       for (var dayData in monthlyResult.data) {
+        print("▶ 서버 일정 데이터: ${dayData['schedules']}");
         DateTime parsedDate = DateTime.parse(dayData['date']);
         DateTime dateKey = DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
 
@@ -536,6 +537,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       final result = await CalendarService.toggleEventStatus(
                         token: token,
                         taskId: event.taskId!,
+                        isCompleted: val ?? !event.isDone,
                       );
 
                       if (result['success']) {
@@ -545,8 +547,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             _events[dateKey]![index].isDone = result['data'] as bool? ?? false;
                           }
                         });
-
-                        final token = await _storage.read(key: 'accessToken') ?? "";
                         _refreshUpcomingOnly(token);
                       } else {
                         _showErrorSnackBar(result['message'] ?? "상태 변경 실패");

@@ -25,6 +25,7 @@ class CalendarEvent {
     final rawCompleted = json['is_completed'] ??
         json['isCompleted'] ??
         json['completed'] ??
+        json['_completed'] ??
         json['completedAt'] ??
         false;
 
