@@ -16,6 +16,8 @@ class RecordScreenState extends State<RecordScreen> {
   Future<Map<String, dynamic>>? _logsFuture;
   bool _isLoading = false;
 
+  DateTime _selectedDate = DateTime.now();
+
   @override
   void initState() {
     super.initState();
@@ -26,6 +28,27 @@ class RecordScreenState extends State<RecordScreen> {
     await _fetchLogs();
   }
 
+  void _changeDate(int days) {
+    setState(() {
+      _selectedDate = _selectedDate.add(Duration(days: days));
+    });
+    _fetchLogs();
+  }
+
+  String _formatDateForApi(DateTime date) {
+    final year = date.year;
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return "$year-$month-$day";
+  }
+
+  String _formatDateForUi(DateTime date) {
+    final year = date.year;
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return "$year.$month.$day";
+  }
+
   Future<void> _fetchLogs() async {
     if (!mounted) return;
     setState(() {
@@ -34,17 +57,9 @@ class RecordScreenState extends State<RecordScreen> {
 
     try {
       final token = await _storage.read(key: 'accessToken') ?? "";
-
-      final now = DateTime.now();
-      final year = now.year;
-      final month = now.month.toString().padLeft(2, '0');
-      final day = now.day.toString().padLeft(2, '0');
-      final formattedDate = "$year-$month-$day";
-
+      final formattedDate = _formatDateForApi(_selectedDate);
       debugPrint(" [목록 요청 날짜 체크]: $formattedDate");
-
       final futureResult = LogService.getLogs(token: token, date: formattedDate);
-
       await futureResult;
 
       if (mounted) {
@@ -63,8 +78,44 @@ class RecordScreenState extends State<RecordScreen> {
     }
   }
 
+  // 달력을 띄우고 날짜를 직접 선택하는 함수 추가
+  Future<void> _selectDateViaCalendar(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF4882FD),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: const Color(0xFF4882FD)),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    // 사용자가 취소를 누르지 않고 날짜를 정상적으로 선택했을 때만 상태 업데이트 및 재조회
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+      _fetchLogs(); // 캘린더로 바뀐 날짜의 데이터 요청
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final isToday = _formatDateForApi(_selectedDate) == _formatDateForApi(now);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F6F6),
       body: RefreshIndicator(
@@ -77,10 +128,61 @@ class RecordScreenState extends State<RecordScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 40),
-                const Center(
-                  child: Text('오늘의 업무 기록', style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.black)),
+                Center(
+                  child: Text(
+                    isToday ? '오늘의 업무 기록' : '그날의 업무 기록',
+                    style: const TextStyle(fontSize: 34, fontWeight: FontWeight.bold, color: Colors.black),
+                  ),
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 20),
+
+                // 상단 날짜 선택 및 변경 바
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5, offset: const Offset(0, 2))],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black54, size: 20),
+                        onPressed: () => _changeDate(-1),
+                      ),
+
+                      InkWell(
+                        onTap: () => _selectDateViaCalendar(context),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Row(
+                            children: [
+                              Text(
+                                _formatDateForUi(_selectedDate),
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(Icons.calendar_month_rounded, size: 18, color: Color(0xFF4882FD)), // 💡 달력 아이콘 힌트 추가
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      IconButton(
+                        icon: Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: isToday ? Colors.grey[300] : Colors.black54,
+                            size: 20
+                        ),
+                        onPressed: isToday ? null : () => _changeDate(1),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 30),
                 const Padding(
                   padding: EdgeInsets.only(left: 20),
                   child: Text('이런 대화들이 있었어요', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: Colors.black)),
@@ -136,52 +238,41 @@ class RecordScreenState extends State<RecordScreen> {
                               itemBuilder: (context, index) {
                                 final item = serverLogs[index];
 
-                                // 💡 1. 타이틀 가공: '2026-05-25 업무 분석'에서 앞의 날짜를 떼어내고 순수 제목만 추출
                                 String displayTitle = item.title;
                                 if (displayTitle.startsWith('202') && displayTitle.contains(' ')) {
-                                  // 공백을 기준으로 쪼갠 뒤 날짜를 제외한 나머지 문자열을 제목으로 사용
                                   final parts = displayTitle.split(' ');
                                   if (parts.length > 1) {
-                                    displayTitle = parts.sublist(1).join(' '); // '업무 분석' 추출
+                                    displayTitle = parts.sublist(1).join(' ');
                                   }
                                 }
 
-                                // 💡 2. 날짜 및 시간 포맷팅 가공 (두 번째 사진 스타일: yyyy.MM.dd HH:mm)
-                                // 현재 item.time이 "17:55:25.617" 형태로 들어오므로 시:분까지만 잘라냅니다.
                                 String formattedTime = item.time;
                                 if (formattedTime.contains(':')) {
                                   final timeParts = formattedTime.split(':');
                                   if (timeParts.length >= 2) {
-                                    formattedTime = "${timeParts[0]}:${timeParts[1]}"; // "17:55"
+                                    formattedTime = "${timeParts[0]}:${timeParts[1]}";
                                   }
                                 }
 
-                                // 오늘 날짜 구하기 (formattedDate와 맵핑하기 위해 포맷 가공)
-                                final now = DateTime.now();
-                                final year = now.year;
-                                final month = now.month.toString().padLeft(2, '0');
-                                final day = now.day.toString().padLeft(2, '0');
-                                final todayStr = "$year.$month.$day"; // "2026.05.25"
-
-                                final displayDateTime = "$todayStr $formattedTime"; // "2026.05.25 17:55"
+                                final currentSelectedDateStr = _formatDateForUi(_selectedDate);
+                                final displayDateTime = "$currentSelectedDateStr $formattedTime";
 
                                 return InkWell(
                                   onTap: () {
                                     Navigator.of(context).push(MaterialPageRoute(
                                       builder: (_) => SummaryScreen(
                                         logId: item.logId,
-                                        meetingTitle: displayTitle, // 💡 가공된 깔끔한 제목 전달
-                                        dateTimeText: displayDateTime, // 💡 가공된 날짜시간 전달
+                                        meetingTitle: displayTitle,
+                                        dateTimeText: displayDateTime,
                                         durationText: item.duration,
                                       ),
                                     ));
                                   },
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 18), // 패딩 조정으로 여백 확보
+                                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 18),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        // 📌 가공된 순수 회의 제목 노출
                                         Text(
                                           displayTitle,
                                           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
@@ -189,7 +280,6 @@ class RecordScreenState extends State<RecordScreen> {
                                         const SizedBox(height: 8),
                                         Row(
                                           children: [
-                                            // 📌 두 번째 사진 스타일: 날짜 시간 형식 출력 (2026.05.25 17:55)
                                             Text(
                                               displayDateTime,
                                               style: const TextStyle(fontSize: 15, color: Color(0xFF868686), fontWeight: FontWeight.w400),
@@ -197,7 +287,6 @@ class RecordScreenState extends State<RecordScreen> {
                                             const SizedBox(width: 8),
                                             const Text('-', style: TextStyle(color: Color(0xFF868686))),
                                             const SizedBox(width: 8),
-                                            // 📌 분석 소요 시간 혹은 상태 노출
                                             Text(
                                               item.duration,
                                               style: const TextStyle(fontSize: 15, color: Color(0xFF868686), fontWeight: FontWeight.w400),
