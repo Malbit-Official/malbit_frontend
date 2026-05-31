@@ -34,37 +34,49 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
   void _loadData() async {
     final token = await _storage.read(key: 'accessToken') ?? "";
-    setState(() {
-      _logDetailFuture = LogService.getLogDetail(
-        token: token,
-        logId: widget.logId,
-      ).then((result) {
-        // 💡 [해결 핵심] LogDetail.fromJson 파싱과 상관없이, 서버 Raw Response에서 메모 데이터를 직접 추출하여 동기화합니다.
-        if (result['success'] == true && result['detail'] != null) {
-          try {
-            final detailData = result['detail'];
 
-            // 1. 서버가 'memos'라는 이름의 배열/리스트로 내려줄 때
-            if (detailData['memos'] is List) {
-              userMemos = List<String>.from(detailData['memos']);
-            }
-            // 2. 서버가 'memoList'라는 이름의 배열/리스트로 내려줄 때
-            else if (detailData['memoList'] is List) {
-              userMemos = List<String>.from(detailData['memoList']);
-            }
-            // 3. 서버가 단일 문자열 'memo' 필드로 내려줄 때 (예: "메모내용")
-            else if (detailData['memo'] != null && detailData['memo'].toString().isNotEmpty) {
-              userMemos = [detailData['memo'].toString()];
-            }
+    // ✅ _logDetailFuture는 최초 1회만 세팅 (로딩 깜빡임 방지)
+    final future = LogService.getLogDetail(
+      token: token,
+      logId: widget.logId,
+    ).then((result) {
+      if (result['success'] == true && result['detail'] != null) {
+        try {
+          final detailData = result['detail'];
 
-            debugPrint("✅ 백엔드로부터 불러온 메모 목록: $userMemos");
-          } catch (e) {
-            debugPrint("⚠️ 서버 메모 파싱 에러: $e");
+          List<String> serverMemos = [];
+
+          if (detailData['memos'] is List) {
+            serverMemos = List<String>.from(detailData['memos']);
+          } else if (detailData['memoList'] is List) {
+            serverMemos = List<String>.from(detailData['memoList']);
+          } else if (detailData['memo'] != null &&
+              detailData['memo'].toString().isNotEmpty) {
+            serverMemos = [detailData['memo'].toString()];
           }
+
+          debugPrint("✅ 백엔드로부터 불러온 메모 목록: $serverMemos");
+
+          // ✅ userMemos가 비어있을 때만 서버 데이터로 초기화
+          // (이미 로컬에서 추가한 메모가 있으면 덮어쓰지 않음)
+          if (mounted && userMemos.isEmpty) {
+            setState(() {
+              userMemos = serverMemos;
+            });
+          }
+        } catch (e) {
+          debugPrint("⚠️ 서버 메모 파싱 에러: $e");
         }
-        return result;
-      });
+      }
+      return result;
     });
+
+    // ✅ _logDetailFuture가 null일 때만 세팅 (재로딩 방지)
+    if (_logDetailFuture == null) {
+      setState(() {
+        _logDetailFuture = future;
+      });
+    }
   }
 
   void _showMemoSheet(BuildContext context) {
@@ -76,21 +88,30 @@ class _SummaryScreenState extends State<SummaryScreen> {
       builder: (context) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Container(
-          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          ),
           padding: const EdgeInsets.all(25),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('메모 추가', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const Text('메모 추가',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 15),
               TextField(
                 controller: memoController,
                 maxLines: 5,
                 decoration: InputDecoration(
                   hintText: '내용을 입력해주세요...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFFEBEBEB))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFF4882FD), width: 2)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide: const BorderSide(color: Color(0xFFEBEBEB))),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      borderSide:
+                      const BorderSide(color: Color(0xFF4882FD), width: 2)),
                   filled: true,
                   fillColor: Colors.white,
                 ),
@@ -103,13 +124,15 @@ class _SummaryScreenState extends State<SummaryScreen> {
                   onPressed: () async {
                     final memoText = memoController.text.trim();
                     if (memoText.isNotEmpty) {
-                      // 1. 화면 UI에 즉시 반영
-                      setState(() { userMemos.add(memoText); });
+                      // ✅ 1. UI 즉시 반영 (로딩 없음)
+                      setState(() {
+                        userMemos.add(memoText);
+                      });
                       Navigator.pop(context);
 
                       try {
-                        // 2. 백엔드 서버에 메모 데이터 영구 저장 요청
-                        final token = await _storage.read(key: 'accessToken') ?? "";
+                        final token =
+                            await _storage.read(key: 'accessToken') ?? "";
                         final result = await LogService.updateMemo(
                           token: token,
                           logId: widget.logId,
@@ -118,13 +141,20 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
                         if (result['success'] == true) {
                           debugPrint("✅ 메모가 서버에 성공적으로 저장되었습니다.");
-                          // 저장 성공 후 데이터 정합성을 위해 서버 데이터를 한 번 더 당겨옵니다.
-                          _loadData();
+                          // ✅ _loadData() 호출 없음 → 로딩 화면 안 뜸
                         } else {
                           debugPrint("⚠️ 서버 메모 저장 실패: ${result['message']}");
+                          // ✅ 실패 시 추가했던 메모 롤백
+                          setState(() {
+                            userMemos.remove(memoText);
+                          });
                         }
                       } catch (e) {
                         debugPrint("❌ 메모 저장 중 통신 에러: $e");
+                        // ✅ 에러 시 추가했던 메모 롤백
+                        setState(() {
+                          userMemos.remove(memoText);
+                        });
                       }
                     } else {
                       Navigator.pop(context);
@@ -132,9 +162,10 @@ class _SummaryScreenState extends State<SummaryScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4882FD),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
-                  ),
-                  child: const Text('저장하기', style: TextStyle(color: Colors.white, fontSize: 16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15))),
+                  child: const Text('저장하기',
+                      style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
               ),
             ],
