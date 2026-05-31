@@ -39,9 +39,12 @@ class CalendarEvent {
       parsedIsDone = rawCompleted.toLowerCase() == 'true' || rawCompleted == '1';
     }
 
+    final rawTitle = json['content'] ?? json['title'] ?? '';
+    final cleanTitle = rawTitle.toString().replaceAll(RegExp(r'^\[.*?\]\s*'), '');
+
     return CalendarEvent(
       taskId: json['task_id'] ?? json['taskId'],
-      title: json['content'] ?? json['title'] ?? '',
+      title: cleanTitle,
       isDone: parsedIsDone,
       startAt: json['start_at'] != null ? DateTime.parse(json['start_at']) : (json['start_time'] != null ? DateTime.parse(json['start_time']) : null),
       endAt: json['end_at'] != null ? DateTime.parse(json['end_at']) : (json['end_time'] != null ? DateTime.parse(json['end_time']) : null),
