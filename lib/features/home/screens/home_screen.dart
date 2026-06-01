@@ -18,7 +18,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  double _participantCount = 0.0;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
 
@@ -193,11 +192,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 30),
 
                     // 상황별 발화 추천 이동 버튼
                     _buildMainActionButton(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 30),
 
                     // 업무 기록 및 녹음
                     _buildSectionCard(
@@ -205,12 +204,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text("오늘의 업무 기록하기", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 15),
-                          _buildParticipantCountRow(),
-                          _buildParticipantSlider(),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 20),
                           _buildRecordingButton(),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
@@ -263,41 +259,6 @@ class _HomeScreenState extends State<HomeScreen> {
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white),
         ),
-      ),
-    );
-  }
-
-  // 참여자 수 표시
-  Widget _buildParticipantCountRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text("참여자 수", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w400, color: Colors.black87)),
-        Text(
-          _participantCount >= 5 ? "5명 이상" : "${_participantCount.toInt()}명",
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
-        ),
-      ],
-    );
-  }
-
-  // 참여자 수 조절 슬라이더
-  Widget _buildParticipantSlider() {
-    return SliderTheme(
-      data: SliderTheme.of(context).copyWith(
-        trackHeight: 2.3,
-        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10.0),
-        overlayShape: const RoundSliderOverlayShape(overlayRadius: 15.0),
-        activeTrackColor: const Color(0xffEF5350),
-        inactiveTrackColor: const Color(0xffF0F0F0),
-        thumbColor: const Color(0xffEF5350),
-      ),
-      child: Slider(
-        value: _participantCount,
-        min: 0,
-        max: 5,
-        divisions: 5,
-        onChanged: (v) => setState(() => _participantCount = v),
       ),
     );
   }
