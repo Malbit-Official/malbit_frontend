@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -6,10 +5,10 @@ import 'package:record/record.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../../core/services/storage.dart';
 import '../../main_navigation/screens/main_screen.dart';
-import '../../record/screens/record_screen.dart';
 import 'calendar_screen.dart';
 import 'package:malbit_frontend/features/roleplay/screens/roleplay_list_screen.dart';
 
+// 홈 화면: 주간 캘린더, 상황별 발화 추천 버튼, 업무 녹음 기능 제공
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 

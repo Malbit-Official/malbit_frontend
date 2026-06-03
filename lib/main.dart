@@ -20,7 +20,6 @@ void main() async {
     nativeAppKey: 'f90beb4e45400ac7959f9e2929295180',
   );
 
-  // ✅ 로그인 상태 확인 로직 복구
   final storage = const FlutterSecureStorage();
   final accessToken = await storage.read(key: 'accessToken');
 
@@ -48,7 +47,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Malbit',
 
-      // ✅ 로그인 여부에 따라 시작 화면 결정
+      // 로그인 여부에 따라 시작 화면 결정
       initialRoute: initialRoute,
 
       localizationsDelegates: const [

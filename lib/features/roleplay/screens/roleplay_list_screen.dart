@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:malbit_frontend/core/services/storage.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
+// 상황별 발화 추천 화면: 상황 선택, 음성 입력, 직접 입력으로 AI 발화 추천 조회
 class RoleplayListScreen extends StatefulWidget {
   const RoleplayListScreen({super.key});
 

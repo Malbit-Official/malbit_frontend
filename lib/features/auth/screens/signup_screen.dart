@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
+// 회원가입 화면: 이메일 인증, 비밀번호 설정, 사용자 정보 입력을 단계별로 수행
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 

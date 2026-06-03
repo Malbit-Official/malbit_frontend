@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/core/services/storage.dart';
 
+// 전화 응대 상황극 화면: STT 음성 인식으로 답변 후 서버에 학습 세션 결과 제공
 class CallScreen extends StatefulWidget {
   final int categoryId;
   const CallScreen({super.key, required this.categoryId});

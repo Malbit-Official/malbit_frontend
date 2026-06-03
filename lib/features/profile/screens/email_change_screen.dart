@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/core/services/storage.dart';
 
+// 이메일 변경 화면: 이메일 인증 코드 발송과 확인을 거쳐 새 이메일을 서버에 업데이트
 class EmailChangeScreen extends StatefulWidget {
   final String currentEmail;
 

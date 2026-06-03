@@ -1,3 +1,4 @@
+// 캘린더에 표시되는 단일 일정 데이터 모델
 class CalendarEvent {
   final int? taskId;
   String title;

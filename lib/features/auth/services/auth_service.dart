@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+// 이메일, 비밀번호 기반 인증 API 클라이언트
+// 회원가입, 로그인, 비밀번호 재설정, 이메일 인증 기능 제공
 class AuthService {
   static const String baseUrl = "http://3.37.239.105:8080";
 

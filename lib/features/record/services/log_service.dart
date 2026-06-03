@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/log.dart';
-import '../models/log_detail.dart';
 
+// 업무 기록의 목록 조회, 상세 조회, 생성, 메모 수정을 처리하는 API 클라이언트
 class LogService {
   static const String baseUrl = "http://3.37.239.105:8080/api";
 

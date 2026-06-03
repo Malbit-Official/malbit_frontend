@@ -7,6 +7,7 @@ import 'package:malbit_frontend/features/profile/screens/email_change_screen.dar
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
+// 프로필 수정 화면: 이름, 장애 유형, 인지 레벨, 직무를 서버에 업데이트하고, 프로필 이미지 업로드
 class EditProfileScreen extends StatefulWidget {
   final String name;
   final String email;

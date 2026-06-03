@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/core/services/storage.dart';
 
+// 비밀번호 변경 화면: 현재 비밀번호 인증 후 새 비밀번호를 서버에 업데이트
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
 

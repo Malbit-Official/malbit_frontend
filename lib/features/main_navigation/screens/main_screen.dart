@@ -6,6 +6,7 @@ import 'package:malbit_frontend/features/template/screens/template_screen.dart';
 import 'package:malbit_frontend/features/roleplay/screens/roleplay_list_screen.dart';
 import 'package:malbit_frontend/features/main_navigation/widgets/bottom_nav.dart';
 
+// 앱의 루트 화면, 하단 네비게이션 바로 5개 탭 관리
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -18,7 +19,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 2;
 
-  // ← GlobalKey 추가
   final GlobalKey<RecordScreenState> _recordScreenKey =
   GlobalKey<RecordScreenState>();
 
@@ -32,7 +32,6 @@ class _MainScreenState extends State<MainScreen> {
     setState(() {
       _currentIndex = index;
     });
-    // ← 4번 탭 이동 시 RecordScreen 새로고침
     if (index == 4) {
       _recordScreenKey.currentState?.refresh();
     }
@@ -48,7 +47,7 @@ class _MainScreenState extends State<MainScreen> {
           const RoleplayListScreen(),
           const HomeScreen(),
           const TemplateScreen(),
-          RecordScreen(key: _recordScreenKey), // ← key 연결
+          RecordScreen(key: _recordScreenKey),
         ],
       ),
       bottomNavigationBar: BottomNavBar(
@@ -57,7 +56,6 @@ class _MainScreenState extends State<MainScreen> {
           setState(() {
             _currentIndex = index;
           });
-          // ← 탭 클릭으로 4번 이동할 때도 새로고침
           if (index == 4) {
             _recordScreenKey.currentState?.refresh();
           }

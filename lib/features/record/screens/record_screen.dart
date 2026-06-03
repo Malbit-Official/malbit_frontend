@@ -4,6 +4,7 @@ import 'package:malbit_frontend/features/record/screens/summary_screen.dart';
 import '../../../core/services/storage.dart';
 import '../services/log_service.dart';
 
+// 업무 기록 화면: 날짜별 로그 목록을 조회하고 상세화면으로 이동
 class RecordScreen extends StatefulWidget {
   const RecordScreen({super.key});
 

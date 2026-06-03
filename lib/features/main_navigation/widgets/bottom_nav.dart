@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// 앱 하단 네비게이션 바 위젯
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
@@ -44,10 +45,10 @@ class BottomNavBar extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        print("탭 클릭됨: $index"); // 터미널(Debug Console)에 이 글자가 뜨는지 확인하세요!
+        print("탭 클릭됨: $index");
         onTap(index);
       },
-      behavior: HitTestBehavior.opaque, // 클릭 영역 확보
+      behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

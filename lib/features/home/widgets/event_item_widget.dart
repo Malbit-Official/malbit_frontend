@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/calendar_event.dart';
 
+// 캘린더 일정 항목 위젯: 체크박스로 완료 상태를 토글하고 길게 누르면 수정 액션 트리거
 class EventItemWidget extends StatefulWidget {
   final CalendarEvent event;
   final VoidCallback onLongPress;
@@ -28,7 +29,6 @@ class _EventItemWidgetState extends State<EventItemWidget> {
     _isDone = widget.event.isDone;
   }
 
-  // 부모에서 event.isDone이 바뀌면 로컬 상태도 동기화
   @override
   void didUpdateWidget(EventItemWidget oldWidget) {
     super.didUpdateWidget(oldWidget);

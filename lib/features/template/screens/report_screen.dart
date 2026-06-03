@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/core/services/storage.dart';
 
+// 업무 보고 상황극 화면: STT 음성 인식으로 답변 후 서버에 학습 세션 결과 저장
 class ReportScreen extends StatefulWidget {
   final int categoryId;
   const ReportScreen({super.key, required this.categoryId});
