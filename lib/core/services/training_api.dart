@@ -4,6 +4,7 @@ import 'package:malbit_frontend/core/services/storage.dart';
 
 const String baseUrl = 'http://3.37.239.105:8080';
 
+// 상황극 기반 학습 세션의 시작, 종료를 서버에 요청하는 API 클라이언트
 class TrainingApi {
   static Future<String?> _getToken() async {
     return await AppStorage.storage.read(key: 'accessToken');
@@ -27,7 +28,7 @@ class TrainingApi {
 
     print('=== START 응답 ===');
     print('status: ${res.statusCode}');
-    print('body: ${utf8.decode(res.bodyBytes)}'); // 👈 응답 전체 출력
+    print('body: ${utf8.decode(res.bodyBytes)}');
 
     final decoded = jsonDecode(utf8.decode(res.bodyBytes));
     print('decoded: $decoded');

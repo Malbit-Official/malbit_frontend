@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+// 공공 데이터 포털의 공휴일 API를 호출하여 특정 연월의 공휴일 날짜 목록 반환
 class HolidayService {
   static const String _serviceKey = "106404e685b32f9903d494fe31ec20e3d39bd4e564b174b8ed6b978b8b0d2f45";
   static const String _baseUrl = "http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo";

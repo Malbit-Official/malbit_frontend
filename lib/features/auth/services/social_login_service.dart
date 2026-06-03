@@ -4,6 +4,7 @@ import 'package:malbit_frontend/core/services/storage.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+// 카카오, 구글 소셜 로그인을 처리하고 백엔드에서 JWT를 발급받는 서비스
 class SocialLoginService {
   static final SocialLoginService _instance = SocialLoginService._internal();
   factory SocialLoginService() => _instance;
@@ -11,7 +12,6 @@ class SocialLoginService {
 
   final _storage = AppStorage.storage;
 
-  // ✅ API 통일
   static const String baseUrl = 'http://3.37.239.105:8080/api/users';
 
   // ✅ 구글 로그인 설정

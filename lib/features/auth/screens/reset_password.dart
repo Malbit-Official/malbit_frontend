@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
+// 비밀번호 재설정 화면: 이메일 인증 후 새 비밀번호 설정
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
 

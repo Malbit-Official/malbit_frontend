@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/core/services/storage.dart';
 
+// 직무 환경 설정 화면: 사용자의 직무 유형을 선택하고 ProfileScreen으로 반환
 class JobEnvironmentScreen extends StatefulWidget {
 
   final String currentJob;

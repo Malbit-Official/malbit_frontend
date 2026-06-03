@@ -9,6 +9,7 @@ import '../services/holiday_service.dart';
 import '../widgets/event_item_widget.dart';
 import '../widgets/event_dialogs.dart';
 
+// 일정 관리 화면: 월별 캘린더, 다가오는 일정, 공휴일 조회와 일정 CRUD 제공
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
 
@@ -26,7 +27,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   // 데이터 리스트
   Map<DateTime, List<CalendarEvent>> _events = {};
-  List<CalendarEvent> _upcomingEvents = [];
   Map<DateTime, String> _holidayMap = {};
   bool _isLoading = false;
 
@@ -76,7 +76,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     // 다가오는 일정 및 공휴일 데이터 상태 업데이트
     setState(() {
       if (upcomingResult.isSuccess) {
-        _upcomingEvents = upcomingResult.data.map((task) => CalendarEvent.fromJson(task)).toList();
       }
 
       _holidayMap = holidayData;
@@ -227,7 +226,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (upcomingResult['success']) {
       final List<dynamic> rawUpcoming = upcomingResult['upcomingTasks'] ?? [];
       setState(() {
-        _upcomingEvents = rawUpcoming.map((task) => CalendarEvent.fromJson(task)).toList();
       });
     }
   }

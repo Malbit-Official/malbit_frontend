@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/calendar_event.dart';
 
+// 캘린더 일정 관리 다이얼로그 모음: 등록, 수정, 삭제 확인 다이얼로그 표시
 class EventDialogs {
   static void _showEventBottomSheet({
     required BuildContext context,

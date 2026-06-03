@@ -4,6 +4,7 @@ import 'product_screen.dart';
 import 'report_screen.dart';
 import 'call_screen.dart';
 
+// 직무 스크립트 목록 화면: 주문, 상품 안내, 업무 보고, 전화 응대 4가지 상황극 카테고리로 이동
 class TemplateScreen extends StatelessWidget {
   const TemplateScreen({super.key});
 

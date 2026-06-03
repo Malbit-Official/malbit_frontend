@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+// 업무 기록 상세 화면에서 사용하는 상세 데이터 모델
+// 회의 요약, 결정사항, 할 일 목록, 메모 포함
 class LogDetail {
   final int logId;
   final String title;
@@ -24,7 +26,6 @@ class LogDetail {
   });
 
   factory LogDetail.fromJson(Map<String, dynamic> json) {
-    // [회의 요약]
     List<String> summaryList = [];
     if (json['summaries'] != null && json['summaries'] is List) {
       summaryList = List<String>.from(json['summaries']);
@@ -33,14 +34,12 @@ class LogDetail {
       if (aiSummary.isNotEmpty) summaryList = [aiSummary];
     }
 
-    // [정한 내용(결정사항)] -> 백엔드 응답 키인 'decisions' 추가 반영
     List<String> decisionList = [];
     final rawChecklist = json['decisions'] ?? json['checklists'] ?? json['checklist'] ?? [];
     if (rawChecklist is List) {
       decisionList = rawChecklist.map((item) => item.toString()).toList();
     }
 
-    // [앞으로 해야 할 일 가공] -> 백엔드 응답 키인 'todos' 추가 반영
     List<TodoItem> todoList = [];
     final rawTodos = json['todos'] ?? json['schedules'] ?? [];
     if (rawTodos is List) {
@@ -67,6 +66,7 @@ class LogDetail {
   }
 }
 
+// 할 일 목록의 단일 항목을 나타내는 모델
 class TodoItem {
   final String assignee;
   final String content;

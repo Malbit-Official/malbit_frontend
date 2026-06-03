@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:malbit_frontend/core/services/storage.dart';
 import 'package:malbit_frontend/features/auth/services/social_login_service.dart';
 
+// 이메일, 비밀번호 로그인 및 카카오, 구글 소셜 로그인 제공 화면
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
+// AI 문장 교정 기능을 위한 오디오 업로드 API 클라이언트
 class RemasterService {
   static const String baseUrl = "http://3.37.239.105:8080";
 

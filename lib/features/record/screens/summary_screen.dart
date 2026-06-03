@@ -3,6 +3,7 @@ import '../../../core/services/storage.dart';
 import '../models/log_detail.dart';
 import '../services/log_service.dart';
 
+// 업무 기록 상세 화면: AI가 생성한 회의 요약, 결정 사항, 할 일 목록과 사용자 메모 표시
 class SummaryScreen extends StatefulWidget {
   final int logId;
   final String meetingTitle;
@@ -35,7 +36,6 @@ class _SummaryScreenState extends State<SummaryScreen> {
   void _loadData() async {
     final token = await _storage.read(key: 'accessToken') ?? "";
 
-    // ✅ _logDetailFuture는 최초 1회만 세팅 (로딩 깜빡임 방지)
     final future = LogService.getLogDetail(
       token: token,
       logId: widget.logId,
@@ -57,8 +57,6 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
           debugPrint("✅ 백엔드로부터 불러온 메모 목록: $serverMemos");
 
-          // ✅ userMemos가 비어있을 때만 서버 데이터로 초기화
-          // (이미 로컬에서 추가한 메모가 있으면 덮어쓰지 않음)
           if (mounted && userMemos.isEmpty) {
             setState(() {
               userMemos = serverMemos;
@@ -71,7 +69,6 @@ class _SummaryScreenState extends State<SummaryScreen> {
       return result;
     });
 
-    // ✅ _logDetailFuture가 null일 때만 세팅 (재로딩 방지)
     if (_logDetailFuture == null) {
       setState(() {
         _logDetailFuture = future;
@@ -141,17 +138,14 @@ class _SummaryScreenState extends State<SummaryScreen> {
 
                         if (result['success'] == true) {
                           debugPrint("✅ 메모가 서버에 성공적으로 저장되었습니다.");
-                          // ✅ _loadData() 호출 없음 → 로딩 화면 안 뜸
                         } else {
                           debugPrint("⚠️ 서버 메모 저장 실패: ${result['message']}");
-                          // ✅ 실패 시 추가했던 메모 롤백
                           setState(() {
                             userMemos.remove(memoText);
                           });
                         }
                       } catch (e) {
                         debugPrint("❌ 메모 저장 중 통신 에러: $e");
-                        // ✅ 에러 시 추가했던 메모 롤백
                         setState(() {
                           userMemos.remove(memoText);
                         });

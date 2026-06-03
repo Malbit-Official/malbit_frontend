@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// 교정된 문장을 가로로 회전된 대형 텍스트로 확대 표시하는 화면
 class ExpandTextScreens extends StatelessWidget {
   final String text;
 

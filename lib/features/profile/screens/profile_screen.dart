@@ -7,6 +7,7 @@ import 'package:malbit_frontend/features/profile/screens/job_environment_screen.
 import 'package:malbit_frontend/features/profile/screens/edit_profile_screen.dart';
 import 'package:malbit_frontend/core/services/storage.dart';
 
+// 프로필 화면: 사용자 정보 조회, 직무 환경 설정, 이용 통계, 로그아웃 제공
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 

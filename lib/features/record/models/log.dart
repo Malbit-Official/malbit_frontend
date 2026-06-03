@@ -1,3 +1,4 @@
+// 업무 기록 목록 화면에서 각 로그 아이템을 표현하는 데이터 모델
 class Log {
   final int logId;
   final String title;

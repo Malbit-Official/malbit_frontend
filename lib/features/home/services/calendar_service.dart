@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+// 캘린더 일정의 CRUD를 처리하는 API 클라이언트
 class CalendarService {
   static const String baseUrl = "http://3.37.239.105:8080";
 
@@ -157,21 +157,18 @@ class CalendarService {
   }
 
   // 일정 완료 상태 토글
-  // 일정 완료 상태를 지정하여 백엔드로 전송 (Body 추가 버전)
   static Future<Map<String, dynamic>> toggleEventStatus({
     required String token,
     required int taskId,
-    required bool isCompleted, // 💡 변경된 true/false 상태 주입받기
+    required bool isCompleted,
   }) async {
     final url = Uri.parse('$baseUrl/api/calendar/$taskId/completion');
 
-    // 💡 백엔드 TaskCompletionRequest DTO 규격에 맞게 바디 생성
     final body = jsonEncode({
       'is_completed': isCompleted,
     });
 
     try {
-      // 💡 body 파라미터 추가
       final response = await http.patch(url, headers: _getHeaders(token), body: body);
 
       print("일정 상태 변경 요청 URL: $url");
@@ -186,7 +183,6 @@ class CalendarService {
         } else if (rawData is String) {
           parsedStatus = rawData.toLowerCase() == 'true';
         }
-
         return {
           'success': true,
           'data': parsedStatus,

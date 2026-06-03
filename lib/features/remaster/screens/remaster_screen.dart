@@ -7,6 +7,7 @@ import '../../../core/services/storage.dart';
 import '../services/remaster_service.dart';
 import 'expand_text_screens.dart';
 
+// AI 문장 교정 화면: 음성 녹음을 서버에 전송하고, 원본 발화와 교정된 문장을 TTS로 재생
 class RemasterScreen extends StatefulWidget {
   const RemasterScreen({super.key});
 
