@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:malbit_frontend/features/home/widgets/analysis_complete_dialog.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -22,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final AudioRecorder _audioRecorder = AudioRecorder();
   bool _isRecording = false;
+  bool _isAnalyzing = false;
   String? _recordedFilePath;
 
   @override
@@ -266,14 +268,37 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildRecordingButton() {
     return Center(
       child: GestureDetector(
-        onTap: _handleRecording,
-        child: Image.asset(
-          "assets/images/Rec_Button.png",
-          width: 55,
-          height: 55,
-          fit: BoxFit.contain,
-          color: _isRecording ? Colors.red.withOpacity(0.5) : null,
-          colorBlendMode: _isRecording ? BlendMode.modulate : null,
+        onTap: _isAnalyzing ? null : _handleRecording,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // 기존 녹음 버튼 이미지
+            Image.asset(
+              "assets/images/Rec_Button.png",
+              width: 55,
+              height: 55,
+              fit: BoxFit.contain,
+              color: _isRecording
+                  ? Colors.red.withOpacity(0.5)
+                  : _isAnalyzing
+                  ? Colors.grey.withOpacity(0.4)
+                  : null,
+              colorBlendMode: (_isRecording || _isAnalyzing)
+                  ? BlendMode.modulate
+                  : null,
+            ),
+
+            // 분석 중일 때만 스피너 오버레이
+            if (_isAnalyzing)
+              const SizedBox(
+                width: 65,
+                height: 65,
+                child: CircularProgressIndicator(
+                  color: Colors.red,
+                  strokeWidth: 3,
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -293,18 +318,11 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } else {
       final path = await _audioRecorder.stop();
-      setState(() => _isRecording = false);
+      setState(() {
+        _isRecording = false;
+        _isAnalyzing = true; // 분석 시작
+      });
       if (path != null) {
-        // 로딩 다이얼로그 표시
-        if (!mounted) return;
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF4882FD)),
-          ),
-        );
-
         try {
           final token = await AppStorage.storage.read(key: 'accessToken') ?? "";
           var request = http.MultipartRequest(
@@ -322,16 +340,11 @@ class _HomeScreenState extends State<HomeScreen> {
           );
 
           if (!mounted) return;
-          Navigator.pop(context);
+          setState(() => _isAnalyzing = false); // 분석 완료
 
           if (response.statusCode == 200) {
             debugPrint("✅ 분석 완료: ${response.body}");
-
-            await Future.delayed(const Duration(milliseconds: 1000));
-
-            if (mounted) {
-              MainScreen.mainScreenState?.setTabIndex(4);
-            }
+            AnalysisCompleteDialog.show(context);
           } else {
             debugPrint("❌ 에러: ${response.statusCode}");
             ScaffoldMessenger.of(context).showSnackBar(
