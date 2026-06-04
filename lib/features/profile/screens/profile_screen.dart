@@ -1,0 +1,521 @@
+import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:malbit_frontend/features/main_navigation/widgets/bottom_nav.dart';
+import 'package:malbit_frontend/features/profile/screens/job_environment_screen.dart';
+import 'package:malbit_frontend/features/profile/screens/edit_profile_screen.dart';
+import 'package:malbit_frontend/core/services/storage.dart';
+
+// 프로필 화면: 사용자 정보 조회, 직무 환경 설정, 이용 통계, 로그아웃 제공
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+
+  String currentJob = "사무직";
+  String userName = "사용자 이름";
+  String email = "email@naver.com";
+  String disabilityType = "";
+  String cognitiveLevel = "";
+  bool notificationEnabled = true;
+  bool isLargeButton = false;
+  String? profileImagePath;
+
+  int totalCorrection = 0;
+  int averageIntensity = 0;
+  int completedRoleplays = 0;
+  int generatedSummaries = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+    _loadStatistics();
+  }
+
+  String convertJobToEnglish(String job) {
+    switch (job) {
+      case "사무직": return "OFFICE";
+      case "영업 / 고객상담": return "SALES";
+      case "의료 / 간호": return "MEDICAL";
+      case "교육 / 학교": return "EDUCATION";
+      case "서비스 / 매장": return "SERVICE";
+      case "기타": return "ETC";
+      default: return "OFFICE";
+    }
+  }
+
+  String convertJobToKorean(String job) {
+    switch (job) {
+      case "OFFICE": return "사무직";
+      case "SALES": return "영업 / 고객상담";
+      case "MEDICAL": return "의료 / 간호";
+      case "EDUCATION": return "교육 / 학교";
+      case "SERVICE": return "서비스 / 매장";
+      case "ETC": return "기타";
+      default: return job;
+    }
+  }
+
+  Future<void> _loadUserInfo() async {
+    try {
+      final token = await AppStorage.storage.read(key: 'accessToken');
+
+      final response = await http.get(
+        Uri.parse('http://3.37.239.105:8080/api/users/me'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      print("유저 정보 응답 코드: ${response.statusCode}");
+      print("유저 정보 응답 내용: ${utf8.decode(response.bodyBytes)}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final user = data['data'];
+
+        setState(() {
+          userName = user['name'] ?? "";
+          email = user['email'] ?? "";
+          currentJob = convertJobToKorean(user['jobType'] ?? "");
+          disabilityType = user['disabilityType'] ?? "";
+          cognitiveLevel = user['cognitiveLevel'] ?? "";
+          final rawImage = user['profileImage'];
+          profileImagePath = (rawImage != null && rawImage.isNotEmpty)
+              ? 'http://3.37.239.105:8080/uploads/${rawImage.split('/uploads/').last}'
+              : null;        });
+      }
+    } catch (e) {
+      print("유저 정보 API 오류: $e");
+    }
+  }
+  Future<void> uploadProfileImage(File image) async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://3.37.239.105:8080/api/users/profile-image'),
+    );
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.files.add(
+      await http.MultipartFile.fromPath('file', image.path),
+    );
+
+    var response = await request.send();
+
+    print("이미지 업로드: ${response.statusCode}");
+  }
+
+  Future<void> _loadStatistics() async {
+    try {
+      final token = await AppStorage.storage.read(key: 'accessToken');
+
+      final response = await http.get(
+        Uri.parse('http://3.37.239.105:8080/api/users/statistics'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      print("통계 요청 URL: http://10.0.2.2:8080/api/users/statistics");
+      print("통계 응답 코드: ${response.statusCode}");
+      print("통계 응답 내용: ${utf8.decode(response.bodyBytes)}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final stats = data['data'];
+
+        setState(() {
+          totalCorrection = stats['totalCorrectionCount'] ?? 0;
+          averageIntensity = stats['averageCorrectionIntensity'] ?? 0;
+          completedRoleplays = stats['completedRoleplays'] ?? 0;
+          generatedSummaries = stats['generatedSummaries'] ?? 0;
+        });
+      }
+    } catch (e) {
+      print("통계 API 오류: $e");
+    }
+  }
+
+  Future<void> _updateJob() async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    final response = await http.patch(
+      Uri.parse('http://3.37.239.105:8080/api/users/settings'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        "jobType": convertJobToKorean(currentJob),
+      }),
+    );
+
+    print("직무 변경 응답: ${response.body}");
+  }
+
+  Future<void> _logout() async {
+    final token = await AppStorage.storage.read(key: 'accessToken');
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://3.37.239.105:8080/api/users/logout'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      print("로그아웃 응답: ${response.body}");
+
+    } catch (e) {
+      print("로그아웃 오류: $e");
+    }
+
+    /// ⭐️ 로컬 토큰 삭제 (중요)
+    await AppStorage.storage.deleteAll();
+
+    /// 로그인 화면 이동
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+            (route) => false,
+      );
+    }
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("로그아웃"),
+          content: const Text("정말 로그아웃 하시겠습니까?"),
+          actions: [
+
+            /// 취소
+            OutlinedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("취소"),
+            ),
+
+            /// 확인
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[100],),
+              onPressed: () async {
+                Navigator.pop(context); // 다이얼로그 닫기
+                await _logout();        // ⭐️ 로그아웃 실행
+              },
+              child: const Text("확인"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F4F4),
+
+      appBar: AppBar(
+        title: const Text('프로필 관리'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: Icon(Icons.settings, color: Colors.black),
+          )
+        ],
+      ),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+
+            /// 프로필 카드
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+
+                  CircleAvatar(
+                    radius: 35,
+                    backgroundImage: profileImagePath != null
+                        ? NetworkImage(profileImagePath!)
+                        : const AssetImage('assets/images/profile.png') as ImageProvider,
+                  ),
+                  const SizedBox(width: 16),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                         Text(
+                          userName,
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(email),
+                        Text("현재 직무 : $currentJob"),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            /// 설정 메뉴
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children:  [
+                  _MenuTile(
+                    title: "프로필 관리",
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditProfileScreen(
+                            name: userName,
+                            email: email,
+                            disabilityType: disabilityType,
+                            cognitiveLevel: cognitiveLevel,
+                          ),
+                        ),
+                      );
+
+                      if (result != null) {
+                        setState(() {
+                          userName = result["name"];
+                          email = result["email"];
+                          disabilityType = result["disabilityType"];
+                          cognitiveLevel = result["cognitiveLevel"];
+                          profileImagePath = result["image"];
+                        });
+                        await _loadUserInfo();
+
+                        // ✅ 다시 저장 (중요)
+                        await AppStorage.storage.write(key: 'name', value: userName);
+                        await AppStorage.storage.write(key: 'email', value: email);
+                        await AppStorage.storage.write(key: 'disabilityType', value: disabilityType);
+                        await AppStorage.storage.write(key: 'cognitiveLevel', value: cognitiveLevel);
+                      }
+                    },
+                  ),
+               ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            /// 직무 환경
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
+                  const Text(
+                    "직무 환경",
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(currentJob),
+
+                      OutlinedButton(
+                        onPressed: () async {
+
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => JobEnvironmentScreen(
+                                currentJob: currentJob,
+                              ),
+                            ),
+                          );
+
+                          if (result != null) {
+                            setState(() {
+                              currentJob = result;
+                            });
+                            await _updateJob();
+                          }
+
+                        },
+                        child: const Text("직무 환경 변경"),
+                      )
+                    ],
+                  ),
+
+                  const Divider(),
+
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            /// 상황극 연습 통계
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "상황극 연습 통계",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    childAspectRatio: 3,
+                    children: [
+                      _StatTile(title: "상황극 연습", value: "$completedRoleplays회"),
+                      _StatTile(title: "총 보정 횟수", value: "$totalCorrection회"),
+                      _StatTile(title: "평균 보정 강도", value: "$averageIntensity%"),
+                      _StatTile(title: "생성한 요약", value: "$generatedSummaries개"),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            /// 로그아웃
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                title: const Text(
+                  "로그아웃",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  _showLogoutDialog(context);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuTile extends StatelessWidget {
+  final String title;
+  final VoidCallback? onTap;
+
+  const _MenuTile({
+    required this.title,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(title),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: onTap,
+    );
+  }
+}
+
+class _SmallButton extends StatelessWidget {
+  final String text;
+  final VoidCallback? onTap;
+
+  const _SmallButton({
+    required this.text,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: onTap,
+      child: Text(text),
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  final String title;
+  final String value;
+
+  const _StatTile({
+    required this.title,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(title),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+              fontWeight: FontWeight.bold),
+        )
+      ],
+    );
+  }
+}

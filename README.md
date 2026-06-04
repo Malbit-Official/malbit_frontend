@@ -1,7 +1,7 @@
 # 🗣️ 말빛 (Malbit) Frontend
 
 > **"더 정확하고 자연스러운 비즈니스 스피치, AI로 말빛을 더하다"**  
-> '말빛(Malbit)'은 직무별 비즈니스 상황극 시뮬레이션, AI 실시간 문장 교정(Remaster), 상황별 발화 추천, 그리고 사용자 음성 프로필 학습을 통해 직장 및 비즈니스 현장에서의 의사소통 능력을 극대화할 수 있도록 지원하는 **AI 기반 스피치 트레이닝 모바일 애플리케이션**입니다.
+> **말빛(Malbit)**은 직무별 비즈니스 상황극 시뮬레이션, AI 실시간 문장 교정(Remaster), 상황별 발화 추천, 그리고 사용자 음성 프로필 학습을 통해 직장 및 비즈니스 현장에서의 의사소통 능력을 극대화할 수 있도록 지원하는 **AI 기반 스피치 트레이닝 모바일 애플리케이션**입니다.
 
 ---
 
@@ -37,7 +37,7 @@ sequenceDiagram
 sequenceDiagram
     autonumber
     actor User as 사용자
-    participant App as Flutter Client (Order/Report/Call Screen)
+    participant App as Flutter Client (Order/Report/Call/Product Screen)
     participant API as Training API
     participant STT as On-Device SpeechToText
 
@@ -65,7 +65,7 @@ sequenceDiagram
 ### 1. AI 문장 교정 (AI Remaster) `features/remaster`
 *   **음성 수집 스펙**: 하드웨어 마이크 권한을 안전하게 획득하고, `record` 패키지를 이용해 **WAV 컨테이너 포맷(16,000Hz Sample Rate, 단일 채널 Mono, 128,000bps Bit Rate)**의 저지연 고음질 음성을 캡처합니다.
 *   **API 통합**: `http.MultipartRequest`를 활용하여 스트리밍 바이트 배열로 음성 파일을 캡처하고, 사용자가 선택한 비즈니스 말씨(Gentle 등) 필드와 함께 `MultipartFile`로 전송합니다.
-*   **종단간 피드백 루프**: 백엔드가 전송한 Whisper ASR 텍스트(`original_speech`)와 LLM 문장 교정본(`refined_text`)을 받아 카드 형태로 시각화합니다. 디바이스의 TTS 엔진(`flutter_tts`)과 다이렉트로 결합되어 발화 가이드를 기계음 형태로 정확히 전달하며, 시력이 낮은 사용자나 집중 훈련을 위해 텍스트를 크게 띄워주는 `ExpandTextScreens` 뷰 모드를 지원합니다.
+*   **종단간 피드백 루프**: 백엔드가 전송한 Whisper ASR 텍스트(`original_speech`)와 LLM 문장 교정본(`refined_text`)을 받아 카드 형태로 시각화합니다. 디바이스의 TTS 엔진(`flutter_tts`)과 직접 연동되어 발화 가이드를 기계음 형태로 정확히 전달하며, 시력이 낮은 사용자나 집중 훈련을 위해 텍스트를 크게 띄워주는 `ExpandTextScreens` 뷰 모드를 지원합니다.
 
 ### 2. 직무 상황극 시뮬레이션 (Job Roleplay) `features/template`
 실제 현장에서 맞닥뜨리는 의사소통 시나리오를 단계별 상호작용 방식으로 연습합니다.
@@ -82,7 +82,7 @@ sequenceDiagram
 *   **다양한 프리셋**: 빈번히 요구되는 실수 사과, 회의 중 발언, 주문/결제, 첫 인사 등의 상황을 카테고리 태그로 빠르게 탐색할 수 있습니다.
 
 ### 4. 개인화된 AI 음성 프로필 학습 `features/voice_settings`
-*   **음성 재등록 파이프라인**: 폰트 및 모음이 균형 잡힌 6개의 표준 대조용 한국어 문장("나는 오늘 기차를 타고...", "달콤한 빵과 따뜻한...")을 사용자에게 순차 제공합니다.
+*   **음성 재등록 파이프라인**: 자음 및 모음이 균형 잡힌 6개의 표준 대조용 한국어 문장("나는 오늘 기차를 타고...", "달콤한 빵과 따뜻한...")을 사용자에게 순차 제공합니다.
 *   **AI 훈련 다중 파일 전송**: 각 문장별 녹음 데이터를 로컬 임시 폴더(`.wav` 포맷)에 저장했다가, 사용자가 완료 버튼을 누르면 단일 Multipart Request의 `voiceFiles` 스트림 리스트에 실어 `/api/users/voice/re-register`로 일괄 전송함으로써 백엔드 측 개인화 AI 보이스 모델을 튜닝하기 위한 기초 데이터를 형성합니다.
 
 ### 5. 일정 조율 및 통계 동기화 `features/home`
@@ -104,7 +104,7 @@ $$D(X, Y) = \frac{2 \times |X \cap Y|}{|X| + |Y|}$$
 
 이 공식은 정밀도(Precision)와 재현율(Recall)의 조화 평균인 **F1-Score**와 수학적으로 완전히 동일합니다.
 *   $\text{Recall} = \frac{|X \cap Y|}{|Y|}$ (힌트 문장에서 사용자가 빠뜨리지 않고 말한 단어 비율)
-*   $\text{Precision} = \frac{|X \cap Y|}{|X|}$ (사용자가 뱉은 말 중에서 힌트 문장과 매칭되는 비율)
+*   $\text{Precision} = \frac{|X \cap Y|}{|X|}$ (사용자가 발화한 단어 중 힌트 문장과 매칭되는 비율)
 *   $\text{F1-Score} = \frac{2 \times \text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}} = \frac{2 \times |X \cap Y|}{|X| + |Y|}$
 
 ### 2. Dart 소스 코드 구현체 (`OrderScreen` 내 발췌)
@@ -148,10 +148,10 @@ double _similarity(String input, String hint) {
 | **보안 스토리지** | `flutter_secure_storage` `^9.0.0` | Android: `EncryptedSharedPreferences`<br/>iOS: `Keychain` 연동 기반 토큰 암호화 저장 |
 | **로컬 저장소** | `shared_preferences` `^2.2.2` | 비정형 사용자 가벼운 설정 값 저장 |
 | **음성 녹음** | `record` `^6.2.0` | 오디오 인코딩 지원 패키지 (WAV 포맷 최적화) |
-| **음성 문자 변환** | `speech_to_text` `^7.0.0` | 다바이스 네이티브 STT 한글 패키지 모듈 |
+| **음성 문자 변환** | `speech_to_text` `^7.0.0` | 디바이스 네이티브 STT 한글 패키지 모듈 |
 | **문자 음성 변환** | `flutter_tts` `^4.2.2` | 피드백 구문 읽어주기 기능 |
 | **네트워크 통신** | `http` `^1.2.0`, `http_parser` `^4.1.2` | 비동기 JSON REST API 연동 및 파일 업로드 처리 |
-| **간편 인증(OAuth)**| `kakao_flutter_sdk_user`, `google_sign_in` | 소셜 로그인 지원 연동 패키지 |
+| **간편 인증(OAuth)**| `kakao_flutter_sdk_user` `^1.9.0`, `google_sign_in` `^6.2.1` | 소셜 로그인 지원 연동 패키지 |
 | **날짜 및 캘린더** | `table_calendar` `^3.2.0`, `intl` `^0.20.2` | 날짜 현지화(ko_KR) 및 캘린더 렌더러 |
 
 ---
@@ -199,12 +199,12 @@ lib/
 
 ## 🚀 시작하기 및 실행 방법 (Getting Started)
 
-### Prerequisites
+### 사전 요구 사항 (Prerequisites)
 *   [Flutter SDK](https://docs.flutter.dev/get-started/install) 설치 (Dart SDK `3.9.2` 및 Flutter `3.29.x` 이상 권장)
 *   물리 모바일 디바이스 또는 시뮬레이터 / 에뮬레이터 환경
 *   카카오 개발자 콘솔 및 Google Cloud Console에 기기 플랫폼별 패키지명(Android: `com.example.malbit_frontend`, iOS BundleID) 및 OAuth 키 해시 사전 등록 완료 필수.
 
-### Installation
+### 설치 및 설정 (Installation)
 
 1.  **Repository Clone**
     ```bash
